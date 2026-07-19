@@ -1,0 +1,44 @@
+﻿name: Deploy DDS Auth Backend
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script_stop: true
+          script: |
+            set -e
+
+            cd ~/OTP-SITE
+
+            git fetch --all
+            git reset --hard origin/main
+
+            cd server
+
+            npm install
+
+            if pm2 describe dds-auth-server >/dev/null 2>&1; then
+              pm2 restart dds-auth-server
+            else
+              pm2 start npm --name dds-auth-server -- start
+            fi
+
+            pm2 save
+
+            echo "Deployment completed successfully."
