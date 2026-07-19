@@ -16,9 +16,10 @@ const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
 
 try {
-  if (firebaseConfig.apiKey && firebaseConfig.apiKey !== 'undefined') {
+  if (firebaseConfig.apiKey && firebaseConfig.apiKey !== 'your_firebase_web_api_key' && firebaseConfig.apiKey !== 'undefined') {
     app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
     auth = getAuth(app);
+    console.log('[Dev Portal Firebase] SDK initialized successfully.');
   } else {
     console.warn('[Dev Portal Firebase] Firebase not configured.');
   }

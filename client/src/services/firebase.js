@@ -13,13 +13,9 @@ const firebaseConfig = {
 let app;
 let auth = null;
 
-// Perform safe initialization
 try {
-  const isKeysConfigured = 
-    firebaseConfig.apiKey && 
-    firebaseConfig.apiKey !== 'your_firebase_web_api_key';
-
-  if (isKeysConfigured) {
+  // Always initialize if apiKey is present (non-empty)
+  if (firebaseConfig.apiKey && firebaseConfig.apiKey !== 'your_firebase_web_api_key' && firebaseConfig.apiKey !== 'undefined') {
     app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
     auth = getAuth(app);
     console.log('[Firebase Client] SDK initialized successfully.');
