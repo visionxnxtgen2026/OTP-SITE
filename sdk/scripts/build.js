@@ -112,7 +112,7 @@ export interface DDSConfig {
   publicKey?: string;
   /** Secret API Key (dds_sk_xxxx). Reads from DDS_SECRET_KEY if not provided. */
   secretKey?: string;
-  /** DDS Server base URL. Reads from DDS_BASE_URL. Defaults to http://localhost:5000. */
+  /** DDS Server base URL. Reads from DDS_BASE_URL. Defaults to https://visionxnx2026.duckdns.org. */
   baseUrl?: string;
   /** @alias appId */
   applicationId?: string;

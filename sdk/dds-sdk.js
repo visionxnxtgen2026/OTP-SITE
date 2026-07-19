@@ -22,7 +22,7 @@ const axios = require('axios');
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const POLL_INTERVAL_MS = 2000;
-const DEFAULT_BASE_URL = 'http://localhost:5000';
+const DEFAULT_BASE_URL = 'https://visionxnx2026.duckdns.org';
 
 // ─── DDSError ─────────────────────────────────────────────────────────────────
 class DDSError extends Error {

@@ -4,7 +4,7 @@
 
 const DEFAULT_BASE_URL = process.env.DDS_BASE_URL
   ? process.env.DDS_BASE_URL.replace(/\/$/, '')
-  : 'http://localhost:5000';
+  : 'https://visionxnx2026.duckdns.org';
 
 const DEFAULT_TIMEOUT_MS = 120000; // 2 minutes (120 seconds)
 const DEFAULT_POLL_INTERVAL_MS = 2000; // 2 seconds

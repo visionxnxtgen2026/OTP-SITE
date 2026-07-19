@@ -23,7 +23,7 @@ const validateConfig = (config = {}) => {
   const appId     = (config.appId     || config.applicationId) || process.env.DDS_APP_ID;
   const publicKey = (config.publicKey || config.apiKey)        || process.env.DDS_PUBLIC_KEY;
   const secretKey = (config.secretKey || config.secret)        || process.env.DDS_SECRET_KEY;
-  const baseUrl   = (config.baseUrl   || config.apiUrl)        || process.env.DDS_BASE_URL || 'http://localhost:5000';
+  const baseUrl   = (config.baseUrl   || config.apiUrl)        || process.env.DDS_BASE_URL || 'https://visionxnx2026.duckdns.org';
 
   if (!appId || typeof appId !== 'string' || !appId.trim()) {
     throw new DDSError(

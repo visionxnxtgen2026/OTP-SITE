@@ -7,7 +7,7 @@ async function testSDK() {
     appId: 'app_cartify_123',
     publicKey: 'dds_pk_CartifyDemoPublic000000000000000',
     secretKey: 'dds_sk_CartifyDemoRealSecret20261234',
-    baseUrl: 'http://localhost:5000'
+    baseUrl: 'https://visionxnx2026.duckdns.org'
   });
 
   console.log('1. Initiating single-line authenticate()...');
@@ -24,7 +24,7 @@ async function testSDK() {
       setTimeout(async () => {
         console.log('2. Simulating User App entering code and tapping Approve...');
         const axios = require('axios');
-        await axios.post('http://localhost:5000/api/v1/auth/approve', {
+        await axios.post('https://visionxnx2026.duckdns.org/api/v1/auth/approve', {
           requestId,
           enteredCode: verificationCode
         });

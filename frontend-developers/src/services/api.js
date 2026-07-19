@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { useDevStore } from '../store/devStore';
 
-// Get API base URL from environment (defaulting to http://localhost:5000/api)
-const rawBaseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Get API base URL from environment
+const rawBaseURL = import.meta.env.VITE_API_URL;
 
 // Strip trailing '/api' if present so that relative endpoint paths starting with '/api/dev/...'\
 // map cleanly to 'http://localhost:5000/api/dev/...'
