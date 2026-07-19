@@ -1,0 +1,268 @@
+# ============================================================
+#  DDS Authentication Platform — .gitignore
+#  Enterprise monorepo standards (Stripe / Clerk / Vercel style)
+#  Covers: server / frontend-developers / frontend-admin / sdk
+# ============================================================
+
+
+# ============================================================
+#  DEPENDENCIES
+# ============================================================
+
+node_modules/
+.pnpm-store/
+.npm/
+.yarn/
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+
+# ============================================================
+#  BUILD OUTPUT
+# ============================================================
+
+dist/
+build/
+out/
+coverage/
+.next/
+.nuxt/
+storybook-static/
+.output/
+
+# SDK-specific build artifacts
+sdk/dist/
+sdk/build/
+
+
+# ============================================================
+#  ENVIRONMENT & SECRETS
+# ============================================================
+# NEVER commit real credentials to version control.
+# Use .env.example as the only committed template.
+
+.env
+.env.local
+.env.development
+.env.development.local
+.env.production
+.env.production.local
+.env.test
+.env.test.local
+.env.staging
+.env.*
+
+# Keep the example template committed (safe, no real values)
+!.env.example
+
+
+# ============================================================
+#  LOG FILES
+# ============================================================
+
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+
+# ============================================================
+#  CACHE & TOOL ARTIFACTS
+# ============================================================
+
+.cache/
+.parcel-cache/
+.vite/
+.eslintcache
+.stylelintcache
+*.tsbuildinfo
+.turbo/
+.vercel/
+
+
+# ============================================================
+#  DATABASES (local / SQLite / flat-file)
+# ============================================================
+
+*.sqlite
+*.sqlite3
+*.db
+*.db-shm
+*.db-wal
+
+
+# ============================================================
+#  UPLOADS (user-generated content, never in source control)
+# ============================================================
+
+uploads/
+public/uploads/
+tmp-uploads/
+
+
+# ============================================================
+#  CRYPTOGRAPHIC SECRETS & CERTIFICATES
+# ============================================================
+
+*.pem
+*.key
+*.crt
+*.pfx
+*.p12
+*.cer
+*.der
+*.csr
+*.jks
+*.keystore
+
+
+# ============================================================
+#  FIREBASE / GOOGLE CLOUD CREDENTIALS
+# ============================================================
+
+serviceAccountKey.json
+firebase-adminsdk*.json
+google-credentials.json
+*-firebase-adminsdk-*.json
+
+
+# ============================================================
+#  STRIPE
+# ============================================================
+
+.stripe/
+stripe-cli/
+.stripe-webhooks
+
+
+# ============================================================
+#  OPERATING SYSTEM GENERATED FILES
+# ============================================================
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+
+# ============================================================
+#  EDITORS & IDEs
+# ============================================================
+
+# VS Code — allow shared workspace & extension recommendations
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# JetBrains (IntelliJ, WebStorm, etc.)
+.idea/
+*.iml
+*.ipr
+*.iws
+.idea_modules/
+
+# Vim / Neovim
+*.swp
+*.swo
+*~
+.netrwhist
+
+# Emacs
+*~
+\#*\#
+.#*
+
+
+# ============================================================
+#  TEMPORARY & SCRATCH FILES
+# ============================================================
+
+tmp/
+temp/
+scratch/
+*.tmp
+*.temp
+*.bak
+*.orig
+*.rej
+
+
+# ============================================================
+#  DOCKER
+# ============================================================
+
+.docker/
+docker-compose.override.yml
+# Keep docker-compose.yml and Dockerfile committed
+
+
+# ============================================================
+#  TESTING & COVERAGE
+# ============================================================
+
+coverage/
+.nyc_output/
+junit.xml
+test-results/
+playwright-report/
+playwright/.cache/
+
+
+# ============================================================
+#  BACKUPS & ARCHIVES
+# ============================================================
+
+backup/
+backups/
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+
+# ============================================================
+#  MISCELLANEOUS
+# ============================================================
+
+# Serverless Framework
+.serverless/
+
+# Sentry
+.sentryclirc
+
+# Netlify
+.netlify/
+
+# Rush
+common/temp/
+
+# Optional: compiled TypeScript declaration maps
+*.d.ts.map
