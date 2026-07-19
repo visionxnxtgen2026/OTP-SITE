@@ -127,10 +127,14 @@ tmp-uploads/
 #  FIREBASE / GOOGLE CLOUD CREDENTIALS
 # ============================================================
 
+# Service account JSON files — NEVER commit these
 serviceAccountKey.json
 firebase-adminsdk*.json
-google-credentials.json
+firebase-service-account.json
+firebase-service-account*.json
 *-firebase-adminsdk-*.json
+google-credentials.json
+server/config/firebase-service-account.json
 
 
 # ============================================================

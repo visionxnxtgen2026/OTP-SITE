@@ -1,23 +1,24 @@
 # =============================================================
-#  frontend-developers/ — React + Vite (Developer Portal)
-#  Developer-facing portal: Applications, Billing, Docs, SDK
+#  server/ — Node.js + Express Backend
+#  REST API, WebSocket, Firebase Admin, Stripe, MongoDB
 # =============================================================
 
 
 # ── Dependencies ─────────────────────────────────────────────
 node_modules/
 .pnpm-store/
+.npm/
 
 # ── Build Output ─────────────────────────────────────────────
 dist/
-dist-ssr/
 build/
 out/
 
 # ── Environment Files ─────────────────────────────────────────
+# CRITICAL: Real .env files must NEVER be committed.
+# Copy .env.example and fill in real values locally.
 .env
 .env.local
-.env.*.local
 .env.development
 .env.development.local
 .env.production
@@ -27,15 +28,6 @@ out/
 .env.*
 !.env.example
 
-# ── Cache & Tool Artifacts ────────────────────────────────────
-.vite/
-.cache/
-.parcel-cache/
-.eslintcache
-.stylelintcache
-*.tsbuildinfo
-.turbo/
-
 # ── Logs ──────────────────────────────────────────────────────
 logs/
 *.log
@@ -43,33 +35,56 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
+
+# ── Cache ─────────────────────────────────────────────────────
+.cache/
+.nyc_output/
+*.tsbuildinfo
+
+# ── Uploads (user-generated content) ─────────────────────────
+uploads/
+tmp-uploads/
 
 # ── Testing & Coverage ────────────────────────────────────────
 coverage/
 .nyc_output/
 test-results/
-playwright-report/
-playwright/.cache/
 
-# ── Firebase / Google Credentials ─────────────────────────────
+# ── Firebase / Google Cloud Credentials ───────────────────────
+# NEVER commit service account JSON files.
+# Use environment variables instead — see /server/config/firebase.js
+config/firebase-service-account.json
+config/firebase-service-account*.json
 serviceAccountKey.json
 firebase-adminsdk*.json
 firebase-service-account*.json
 *service-account*.json
+*-firebase-adminsdk-*.json
 google-credentials.json
+google-cloud-*.json
 
-# ── Cryptographic Secrets ─────────────────────────────────────
+# ── Cryptographic Secrets & Certificates ─────────────────────
 *.pem
 *.key
 *.crt
 *.p12
 *.pfx
 *.cer
+*.der
+*.csr
+*.jks
+*.keystore
 
 # ── Stripe ────────────────────────────────────────────────────
 .stripe/
 stripe-cli/
+
+# ── Databases ─────────────────────────────────────────────────
+*.sqlite
+*.sqlite3
+*.db
+*.db-shm
+*.db-wal
 
 # ── Operating System ──────────────────────────────────────────
 .DS_Store
@@ -81,14 +96,10 @@ Desktop.ini
 !.vscode/extensions.json
 !.vscode/settings.json
 .idea/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
 *.sw?
+*.bak
 
 # ── Temp ──────────────────────────────────────────────────────
 tmp/
 temp/
 *.tmp
-*.bak

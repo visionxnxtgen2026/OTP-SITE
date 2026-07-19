@@ -1,6 +1,6 @@
 # =============================================================
-#  frontend-developers/ — React + Vite (Developer Portal)
-#  Developer-facing portal: Applications, Billing, Docs, SDK
+#  frontend-admin/ — React + Vite (Admin Control Panel)
+#  Admin portal: User management, Pricing, Analytics, Config
 # =============================================================
 
 
@@ -66,10 +66,6 @@ google-credentials.json
 *.p12
 *.pfx
 *.cer
-
-# ── Stripe ────────────────────────────────────────────────────
-.stripe/
-stripe-cli/
 
 # ── Operating System ──────────────────────────────────────────
 .DS_Store
