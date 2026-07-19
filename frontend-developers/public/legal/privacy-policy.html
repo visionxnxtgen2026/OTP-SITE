@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy - DDS Developer Portal</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;800;900&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #475569;
+      --border: #e2e8f0;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-light: #eff6ff;
+      --toc-active: #2563eb;
+      --code-bg: #f1f5f9;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b0f19;
+        --card-bg: #111827;
+        --text: #f8fafc;
+        --text-muted: #94a3b8;
+        --border: #1f2937;
+        --primary: #3b82f6;
+        --primary-hover: #2563eb;
+        --primary-light: #1e3a8a;
+        --toc-active: #60a5fa;
+        --code-bg: #1e293b;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Navbar */
+    .navbar {
+      height: 60px;
+      border-bottom: 1px solid var(--border);
+      background-color: var(--card-bg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 800;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .logo-icon {
+      width: 24px;
+      height: 24px;
+      background-color: var(--primary);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg {
+      width: 14px;
+      height: 14px;
+      fill: white;
+    }
+
+    .portal-link {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--primary);
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      background-color: var(--primary-light);
+      transition: all 0.2s ease;
+    }
+
+    .portal-link:hover {
+      opacity: 0.9;
+    }
+
+    /* Main Container */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 3rem;
+    }
+
+    @media (max-width: 968px) {
+      .container {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        padding: 2rem 1.25rem;
+      }
+    }
+
+    /* Header Panel */
+    .header-panel {
+      grid-column: 1 / -1;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background-color: var(--primary-light);
+      color: var(--primary);
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+
+    .meta {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Sidebar / Table of Contents */
+    aside {
+      position: sticky;
+      top: 90px;
+      height: calc(100vh - 120px);
+      overflow-y: auto;
+      padding-right: 1rem;
+    }
+
+    @media (max-width: 968px) {
+      aside {
+        display: none; /* Hide TOC on mobile */
+      }
+    }
+
+    .toc-title {
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    .toc-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .toc-link {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 500;
+      display: block;
+      transition: color 0.15s ease;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .toc-link:hover {
+      color: var(--text);
+    }
+
+    .toc-link.active {
+      color: var(--toc-active);
+      font-weight: 600;
+    }
+
+    /* Main Content Area */
+    main {
+      min-width: 0;
+      max-width: 800px;
+    }
+
+    section {
+      margin-bottom: 3rem;
+      scroll-margin-top: 100px;
+    }
+
+    h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin: 1.5rem 0 0.5rem 0;
+    }
+
+    p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      line-height: 1.7;
+    }
+
+    ul, ol {
+      margin-left: 1.5rem;
+      margin-bottom: 1rem;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    li {
+      margin-bottom: 0.5rem;
+    }
+
+    code {
+      font-family: monospace;
+      background-color: var(--code-bg);
+      padding: 0.1rem 0.3rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      background-color: var(--card-bg);
+      padding: 3rem 2rem;
+      margin-top: 4rem;
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+
+    .footer-left {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 1.5rem;
+      list-style: none;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 550;
+      transition: color 0.15s ease;
+    }
+
+    .footer-links a:hover {
+      color: var(--primary);
+    }
+
+    @media (max-width: 640px) {
+      .footer-content {
+        flex-direction: column;
+        text-align: center;
+      }
+      .footer-links {
+        justify-content: center;
+      }
+    }
+
+    /* Print styling */
+    @media print {
+      body {
+        background-color: white;
+        color: black;
+      }
+      .navbar, aside, footer, .portal-link {
+        display: none !important;
+      }
+      .container {
+        grid-template-columns: 1fr;
+        padding: 0;
+      }
+      main {
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <a href="/" class="brand">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
+        </svg>
+      </div>
+      <span>DDS</span>
+    </a>
+    <a href="/login" class="portal-link">Developer Portal</a>
+  </header>
+
+  <!-- Container -->
+  <div class="container">
+    
+    <!-- Header Title Panel -->
+    <div class="header-panel">
+      <span class="badge">Legal Document</span>
+      <h1>Privacy Policy</h1>
+      <div class="meta">Last Updated: July 19, 2026 &bull; Version 2.0.0</div>
+    </div>
+
+    <!-- Table of Contents -->
+    <aside>
+      <div class="toc-title">On this page</div>
+      <ul class="toc-list">
+        <li><a href="#introduction" class="toc-link">1. Introduction</a></li>
+        <li><a href="#info-collect" class="toc-link">2. Information We Collect</a></li>
+        <li><a href="#third-party" class="toc-link">3. Third-Party Services</a></li>
+        <li><a href="#retention" class="toc-link">4. Data Retention</a></li>
+        <li><a href="#security" class="toc-link">5. Data Security</a></li>
+        <li><a href="#responsibilities" class="toc-link">6. Developer Obligations</a></li>
+        <li><a href="#user-rights" class="toc-link">7. End-User Rights</a></li>
+        <li><a href="#compliance" class="toc-link">8. GDPR & CCPA Compliance</a></li>
+        <li><a href="#transfers" class="toc-link">9. International Transfers</a></li>
+        <li><a href="#children" class="toc-link">10. Children's Privacy</a></li>
+        <li><a href="#updates" class="toc-link">11. Policy Updates</a></li>
+        <li><a href="#contact" class="toc-link">12. Contact Information</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main>
+      
+      <section id="introduction">
+        <h2>1. Introduction</h2>
+        <p>
+          Welcome to the Dynamic Decision System ("DDS") Authentication Platform. DDS is committed to protecting the privacy of our developers ("Developers") and the end-users ("End-Users") of our Developers' applications.
+        </p>
+        <p>
+          This Privacy Policy explains how we collect, process, share, and protect information when you utilize the DDS Developer Portal, our software development kits (SDKs), and our APIs. By creating an account or integrating DDS, you agree to the collection and use of information in accordance with this policy.
+        </p>
+      </section>
+
+      <section id="info-collect">
+        <h2>2. Information We Collect</h2>
+        <p>We collect information necessary to operate the DDS Authentication Platform and deliver cryptographically secure, push-based verification services.</p>
+        
+        <h3>A. Developer Account Information</h3>
+        <p>
+          When Developers register for a DDS account, we collect credentials and details including:
+        </p>
+        <ul>
+          <li>Full name and profile picture (via Google Authentication or Firebase Auth)</li>
+          <li>Email address (for account notices, invoices, and alerts)</li>
+          <li>Company or corporate entity name</li>
+          <li>Company website URL</li>
+          <li>Developer preferred timezone (for usage limit resets)</li>
+        </ul>
+
+        <h3>B. Application Information</h3>
+        <p>
+          To configure authentication integration, Developers create application profiles containing application names, metadata configurations, logotypes, environment specifications, and callback URLs.
+        </p>
+
+        <h3>C. API Credentials</h3>
+        <p>
+          We generate and store cryptographically secure API credentials including <code>Application IDs</code>, <code>Public API Keys</code>, and one-way hashed SHA-256 signatures of <code>Secret API Keys</code>. Plaintext Secret API Keys are never stored in our systems.
+        </p>
+
+        <h3>D. Authentication Logs</h3>
+        <p>
+          To verify identities, we process phone numbers and generate temporary verification request tokens. We record and store:
+        </p>
+        <ul>
+          <li>Hashed phone numbers (E.164 format)</li>
+          <li>Request timestamp, expiration duration, and completion latency</li>
+          <li>Authentication results (<code>PENDING</code>, <code>APPROVED</code>, <code>REJECTED</code>, or <code>EXPIRED</code>)</li>
+          <li>Device details (browser type, operating system) and IP addresses associated with requests</li>
+        </ul>
+
+        <h3>E. Usage Analytics & Billing Information</h3>
+        <p>
+          We compile aggregate requests metrics for usage billing. In partnership with Stripe, we collect billing profile identifiers, payment history records, outstanding balances, and default payment card details (brand, last 4 digits, card expiration month and year).
+        </p>
+      </section>
+
+      <section id="third-party">
+        <h2>3. Third-Party Services</h2>
+        <p>We leverage industry-standard third-party subprocessors to handle infrastructure operations:</p>
+        <ul>
+          <li><strong>Stripe:</strong> Payment processing, invoices, and credit card validation. Credit card details are sent directly to Stripe and never touch our servers.</li>
+          <li><strong>Firebase Authentication:</strong> Identity provider for secure Developer Portal authentication.</li>
+          <li><strong>GitHub:</strong> Hosting of software development repositories, SDK packages, and documentation updates.</li>
+        </ul>
+      </section>
+
+      <section id="retention">
+        <h2>4. Data Retention</h2>
+        <p>
+          Developer profile data is retained as long as the account remains active. You can delete your developer account at any time under Settings, which permanently purges all credentials, invoices, and apps.
+        </p>
+        <p>
+          Authentication logs containing end-user IP addresses and E.164 phone numbers are automatically deleted or anonymized after ninety (90) days.
+        </p>
+      </section>
+
+      <section id="security">
+        <h2>5. Data Security</h2>
+        <p>
+          DDS utilizes robust encryption standards. All communication is encrypted in transit using Transport Layer Security (TLS 1.3). Database collections are encrypted at rest using AES-256. API keys and passwords are hashed using salt-fortified bcrypt algorithms.
+        </p>
+      </section>
+
+      <section id="responsibilities">
+        <h2>6. Developer Obligations</h2>
+        <p>
+          Developers must keep their Secret API Keys secure. Sharing or exposing Secret API Keys inside frontend web browsers or public client-side repositories (like GitHub) is strictly prohibited. You must integrate DDS credentials using secure backend environment configurations.
+        </p>
+      </section>
+
+      <section id="user-rights">
+        <h2>7. End-User Rights</h2>
+        <p>
+          End-users whose phone numbers are verified via DDS have the right to request deletion or access to their logs. Developers must provide clear privacy disclosures to their users outlining the use of third-party authentication services.
+        </p>
+      </section>
+
+      <section id="compliance">
+        <h2>8. GDPR & CCPA Compliance</h2>
+        <p>
+          DDS complies with the General Data Protection Regulation (GDPR) and the California Consumer Privacy Act (CCPA). We act as a <strong>Data Processor</strong> for end-user authentication logs, and a <strong>Data Controller</strong> for Developer account information.
+        </p>
+      </section>
+
+      <section id="transfers">
+        <h2>9. International Transfers</h2>
+        <p>
+          To provide global phone verification, your data may be transferred to and maintained on servers located outside of your state, province, or country. DDS ensures all transfers adhere to legal transfer mechanism frameworks.
+        </p>
+      </section>
+
+      <section id="children">
+        <h2>10. Children's Privacy</h2>
+        <p>
+          DDS services are directed to developers aged 18 and older. We do not knowingly collect personal information from individuals under the age of 13.
+        </p>
+      </section>
+
+      <section id="updates">
+        <h2>11. Policy Updates</h2>
+        <p>
+          We may update our Privacy Policy periodically. We will notify you of any material changes by posting the new policy on this page and updating the "Last Updated" timestamp.
+        </p>
+      </section>
+
+      <section id="contact">
+        <h2>12. Contact Information</h2>
+        <p>
+          If you have questions about this Privacy Policy, please contact us at:
+        </p>
+        <p>
+          Email: <a href="mailto:privacy@dds.com">privacy@dds.com</a><br>
+          Address: DDS Identity Platform Inc., Bangalore, India
+        </p>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-content">
+      <div class="footer-left">
+        &copy; 2026 DDS Authentication Platform &bull; v2.0.0
+      </div>
+      <ul class="footer-links">
+        <li><a href="/legal/privacy-policy.html">Privacy Policy</a></li>
+        <li><a href="/legal/terms-and-conditions.html">Terms & Conditions</a></li>
+        <li><a href="/legal/about-dds.html">About DDS</a></li>
+        <li><a href="/settings/support">Support</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <script>
+    // Highlight active section in TOC on scroll
+    window.addEventListener('DOMContentLoaded', () => {
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          const id = entry.target.getAttribute('id');
+          const tocLink = document.querySelector(`.toc-link[href="#${id}"]`);
+          if (tocLink) {
+            if (entry.isIntersecting) {
+              document.querySelectorAll('.toc-link').forEach(l => l.classList.remove('active'));
+              tocLink.classList.add('active');
+            }
+          }
+        });
+      }, { rootMargin: '-20% 0px -60% 0px' });
+
+      document.querySelectorAll('section').forEach(section => {
+        observer.observe(section);
+      });
+    });
+  </script>
+</body>
+</html>

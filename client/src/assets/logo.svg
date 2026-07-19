@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" class="w-12 h-12">
+  <defs>
+    <linearGradient id="dds-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#1D4ED8" />
+    </linearGradient>
+  </defs>
+  <!-- Main Shield Shape -->
+  <path d="M32 4L52 12V28C52 44 41 54.5 32 60C23 54.5 12 44 12 28V12L32 4Z" fill="url(#dds-grad)" />
+  <!-- Inner Details representing 'D' & 'S' connections -->
+  <path d="M26 20H34C37.3 20 40 22.7 40 26C40 29.3 37.3 32 34 32H26V20Z" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M26 32H34C37.3 32 40 34.7 40 38C40 41.3 37.3 44 34 44H26" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+</svg>

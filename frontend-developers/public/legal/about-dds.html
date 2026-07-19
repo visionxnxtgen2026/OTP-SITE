@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About DDS - Dynamic Decision System</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;800;900&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #475569;
+      --border: #e2e8f0;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-light: #eff6ff;
+      --toc-active: #2563eb;
+      --code-bg: #f1f5f9;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b0f19;
+        --card-bg: #111827;
+        --text: #f8fafc;
+        --text-muted: #94a3b8;
+        --border: #1f2937;
+        --primary: #3b82f6;
+        --primary-hover: #2563eb;
+        --primary-light: #1e3a8a;
+        --toc-active: #60a5fa;
+        --code-bg: #1e293b;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Navbar */
+    .navbar {
+      height: 60px;
+      border-bottom: 1px solid var(--border);
+      background-color: var(--card-bg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 800;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .logo-icon {
+      width: 24px;
+      height: 24px;
+      background-color: var(--primary);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg {
+      width: 14px;
+      height: 14px;
+      fill: white;
+    }
+
+    .portal-link {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--primary);
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      background-color: var(--primary-light);
+      transition: all 0.2s ease;
+    }
+
+    .portal-link:hover {
+      opacity: 0.9;
+    }
+
+    /* Main Container */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 3rem;
+    }
+
+    @media (max-width: 968px) {
+      .container {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        padding: 2rem 1.25rem;
+      }
+    }
+
+    /* Header Panel */
+    .header-panel {
+      grid-column: 1 / -1;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background-color: var(--primary-light);
+      color: var(--primary);
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+
+    .meta {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Sidebar / Table of Contents */
+    aside {
+      position: sticky;
+      top: 90px;
+      height: calc(100vh - 120px);
+      overflow-y: auto;
+      padding-right: 1rem;
+    }
+
+    @media (max-width: 968px) {
+      aside {
+        display: none; /* Hide TOC on mobile */
+      }
+    }
+
+    .toc-title {
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    .toc-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .toc-link {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 500;
+      display: block;
+      transition: color 0.15s ease;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .toc-link:hover {
+      color: var(--text);
+    }
+
+    .toc-link.active {
+      color: var(--toc-active);
+      font-weight: 600;
+    }
+
+    /* Main Content Area */
+    main {
+      min-width: 0;
+      max-width: 800px;
+    }
+
+    section {
+      margin-bottom: 3rem;
+      scroll-margin-top: 100px;
+    }
+
+    h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin: 1.5rem 0 0.5rem 0;
+    }
+
+    p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      line-height: 1.7;
+    }
+
+    ul, ol {
+      margin-left: 1.5rem;
+      margin-bottom: 1rem;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    li {
+      margin-bottom: 0.5rem;
+    }
+
+    code {
+      font-family: monospace;
+      background-color: var(--code-bg);
+      padding: 0.1rem 0.3rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      background-color: var(--card-bg);
+      padding: 3rem 2rem;
+      margin-top: 4rem;
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+
+    .footer-left {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 1.5rem;
+      list-style: none;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 550;
+      transition: color 0.15s ease;
+    }
+
+    .footer-links a:hover {
+      color: var(--primary);
+    }
+
+    @media (max-width: 640px) {
+      .footer-content {
+        flex-direction: column;
+        text-align: center;
+      }
+      .footer-links {
+        justify-content: center;
+      }
+    }
+
+    /* Print styling */
+    @media print {
+      body {
+        background-color: white;
+        color: black;
+      }
+      .navbar, aside, footer, .portal-link {
+        display: none !important;
+      }
+      .container {
+        grid-template-columns: 1fr;
+        padding: 0;
+      }
+      main {
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <a href="/" class="brand">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
+        </svg>
+      </div>
+      <span>DDS</span>
+    </a>
+    <a href="/login" class="portal-link">Developer Portal</a>
+  </header>
+
+  <!-- Container -->
+  <div class="container">
+    
+    <!-- Header Title Panel -->
+    <div class="header-panel">
+      <span class="badge">About DDS</span>
+      <h1>Dynamic Decision System</h1>
+      <div class="meta">Corporate Overview &bull; Platform Version 2.0.0</div>
+    </div>
+
+    <!-- Table of Contents -->
+    <aside>
+      <div class="toc-title">About the Platform</div>
+      <ul class="toc-list">
+        <li><a href="#overview" class="toc-link">1. DDS Overview</a></li>
+        <li><a href="#mission" class="toc-link">2. Mission & Vision</a></li>
+        <li><a href="#architecture" class="toc-link">3. Platform Architecture</a></li>
+        <li><a href="#auth-model" class="toc-link">4. Authentication Model</a></li>
+        <li><a href="#security" class="toc-link">5. Security Principles</a></li>
+        <li><a href="#why-dds" class="toc-link">6. Why DDS?</a></li>
+        <li><a href="#release-notes" class="toc-link">7. Release Notes</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main>
+      
+      <section id="overview">
+        <h2>1. DDS Overview</h2>
+        <p>
+          The Dynamic Decision System ("DDS") is an enterprise-grade identity and multi-factor authentication (MFA) platform designed for the modern web. 
+        </p>
+        <p>
+          Similar to tools like Duo and Okta Verify, DDS shifts the authentication paradigm away from friction-heavy OTP text messages and hardware tokens, replacing them with seamless, secure, push-notification-based approvals routed directly to the DDS Mobile App.
+        </p>
+      </section>
+
+      <section id="mission">
+        <h2>2. Mission & Vision</h2>
+        <h3>Our Mission</h3>
+        <p>
+          To empower developers with plug-and-play, zero-configuration identity controls that protect user applications from credential harvesting and SIM-swapping attacks.
+        </p>
+        <h3>Our Vision</h3>
+        <p>
+          To make passwordless verification the global standard, ensuring every digital interaction is secured by strong, asymmetric, public-key cryptography with zero friction for the end-user.
+        </p>
+      </section>
+
+      <section id="architecture">
+        <h2>3. Platform Architecture</h2>
+        <p>
+          DDS utilizes a distributed, real-time microservices architecture designed to process verification sessions with sub-second latency.
+        </p>
+        <ul>
+          <li><strong>Developer Website/Backend:</strong> Interacts with DDS via the official SDK packages (e.g., <code>@dds/server</code>).</li>
+          <li><strong>DDS Server:</strong> Central authentication engine handling requests verification, database operations, and real-time WebSocket messaging.</li>
+          <li><strong>Real-time Broker:</strong> Manages state-synchronized connections with both the Developer Portal and the DDS Mobile App for instant push notifications.</li>
+          <li><strong>DDS Mobile Application:</strong> The user-facing app that processes cryptographic approvals.</li>
+        </ul>
+      </section>
+
+      <section id="auth-model">
+        <h2>4. Authentication Model</h2>
+        <p>
+          The core DDS authentication flow operates as follows:
+        </p>
+        <ol>
+          <li>A developer website requests authentication for a specific user using their mobile number.</li>
+          <li>The DDS Server validates the developer's credentials (<code>App ID</code>, <code>Public Key</code>, <code>Secret Key</code>) and returns a verification code.</li>
+          <li>The developer website immediately displays this code.</li>
+          <li>The user receives a secure push prompt on their verified DDS Mobile App.</li>
+          <li>The user inputs the matching verification code and taps <strong>Approve</strong>.</li>
+          <li>DDS Server verifies the signature, updates the status, and the developer website completes the login.</li>
+        </ol>
+      </section>
+
+      <section id="security">
+        <h2>5. Security Principles</h2>
+        <p>
+          DDS is built on a foundation of strict security guidelines:
+        </p>
+        <ul>
+          <li><strong>Asymmetric Key Pairs:</strong> Verification payloads are signed and confirmed cryptographically on-device.</li>
+          <li><strong>Credential Isolation:</strong> Developers must keep Secret Keys inside secure backend environments. The DDS SDK strictly rejects client-side initialization to prevent token leaks.</li>
+          <li><strong>Hashed Credentials:</strong> API credentials are verified against one-way SHA-256 signatures, ensuring even in the case of system intrusions, secrets remain uncompromised.</li>
+        </ul>
+      </section>
+
+      <section id="why-dds">
+        <h2>6. Why DDS?</h2>
+        <p>
+          DDS provides enterprise features that streamline operations and offer unmatched developer experiences:
+        </p>
+        <ul>
+          <li><strong>Pay As You Go Scaling:</strong> Avoid high fixed costs. Pay only for successful authentication requests.</li>
+          <li><strong>Zero-Config SDK:</strong> Initialized with a single CLI command (<code>npx dds init</code>), configuring routes and clients instantly.</li>
+          <li><strong>Grace Period Protections:</strong> 7-day payment window prevents service interruptions when card authorizations fail.</li>
+        </ul>
+      </section>
+
+      <section id="release-notes">
+        <h2>7. Release Notes</h2>
+        <h3>Version 2.0.0 (July 2026)</h3>
+        <ul>
+          <li>Redesigned the SDK into official <code>@dds/server</code>, <code>@dds/web</code>, and <code>@dds/react</code> plug-and-play packages.</li>
+          <li>Implemented a postpaid Pay As You Go billing system with Stripe, including 5 free daily requests, timezone-based quota resets, and 7-day payment grace periods.</li>
+          <li>Created the Webhook Simulator Panel for sandbox event validation.</li>
+        </ul>
+        <h3>Version 1.5.0 (May 2026)</h3>
+        <ul>
+          <li>Added real-time dashboard analytics tracking authentication approvals, rejections, and latency logs.</li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-content">
+      <div class="footer-left">
+        &copy; 2026 DDS Authentication Platform &bull; v2.0.0
+      </div>
+      <ul class="footer-links">
+        <li><a href="/legal/privacy-policy.html">Privacy Policy</a></li>
+        <li><a href="/legal/terms-and-conditions.html">Terms & Conditions</a></li>
+        <li><a href="/legal/about-dds.html">About DDS</a></li>
+        <li><a href="/settings/support">Support</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <script>
+    // Highlight active section in TOC on scroll
+    window.addEventListener('DOMContentLoaded', () => {
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          const id = entry.target.getAttribute('id');
+          const tocLink = document.querySelector(`.toc-link[href="#${id}"]`);
+          if (tocLink) {
+            if (entry.isIntersecting) {
+              document.querySelectorAll('.toc-link').forEach(l => l.classList.remove('active'));
+              tocLink.classList.add('active');
+            }
+          }
+        });
+      }, { rootMargin: '-20% 0px -60% 0px' });
+
+      document.querySelectorAll('section').forEach(section => {
+        observer.observe(section);
+      });
+    });
+  </script>
+</body>
+</html>

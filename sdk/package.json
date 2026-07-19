@@ -1,0 +1,51 @@
+{
+  "name": "@dds/server",
+  "version": "1.0.0",
+  "description": "Official DDS Backend SDK — plug-and-play push-based authentication for Node.js, Express, Fastify, NestJS",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "dds": "./bin/dds.js"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "dev": "node src/index.js",
+    "build": "node scripts/build.js",
+    "clean": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\"",
+    "test": "node test.js"
+  },
+  "license": "MIT",
+  "author": "DDS Team",
+  "keywords": [
+    "dds",
+    "authentication",
+    "phone-auth",
+    "push-auth",
+    "mobile-auth",
+    "identity",
+    "sdk",
+    "server",
+    "express",
+    "fastify",
+    "nestjs"
+  ],
+  "dependencies": {
+    "axios": "^1.6.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
+

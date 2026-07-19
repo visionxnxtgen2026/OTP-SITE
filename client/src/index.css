@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #FFFFFF;
+    color: #111827;
+    -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
+  }
+
+  /* Custom styling to hide spin buttons on number inputs (OTP, Phone) */
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type=number] {
+    -moz-appearance: textfield;
+  }
+}
+
+@layer utilities {
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Hide scrollbar for native app feel */
+  .scrollbar-none {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
+
+  /* Safe Area paddings */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+}

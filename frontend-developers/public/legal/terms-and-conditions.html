@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terms & Conditions - DDS Developer Portal</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;800;900&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #475569;
+      --border: #e2e8f0;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-light: #eff6ff;
+      --toc-active: #2563eb;
+      --code-bg: #f1f5f9;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b0f19;
+        --card-bg: #111827;
+        --text: #f8fafc;
+        --text-muted: #94a3b8;
+        --border: #1f2937;
+        --primary: #3b82f6;
+        --primary-hover: #2563eb;
+        --primary-light: #1e3a8a;
+        --toc-active: #60a5fa;
+        --code-bg: #1e293b;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Navbar */
+    .navbar {
+      height: 60px;
+      border-bottom: 1px solid var(--border);
+      background-color: var(--card-bg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 800;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .logo-icon {
+      width: 24px;
+      height: 24px;
+      background-color: var(--primary);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg {
+      width: 14px;
+      height: 14px;
+      fill: white;
+    }
+
+    .portal-link {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--primary);
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      background-color: var(--primary-light);
+      transition: all 0.2s ease;
+    }
+
+    .portal-link:hover {
+      opacity: 0.9;
+    }
+
+    /* Main Container */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 3rem;
+    }
+
+    @media (max-width: 968px) {
+      .container {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        padding: 2rem 1.25rem;
+      }
+    }
+
+    /* Header Panel */
+    .header-panel {
+      grid-column: 1 / -1;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background-color: var(--primary-light);
+      color: var(--primary);
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+
+    .meta {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Sidebar / Table of Contents */
+    aside {
+      position: sticky;
+      top: 90px;
+      height: calc(100vh - 120px);
+      overflow-y: auto;
+      padding-right: 1rem;
+    }
+
+    @media (max-width: 968px) {
+      aside {
+        display: none; /* Hide TOC on mobile */
+      }
+    }
+
+    .toc-title {
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    .toc-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .toc-link {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 500;
+      display: block;
+      transition: color 0.15s ease;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .toc-link:hover {
+      color: var(--text);
+    }
+
+    .toc-link.active {
+      color: var(--toc-active);
+      font-weight: 600;
+    }
+
+    /* Main Content Area */
+    main {
+      min-width: 0;
+      max-width: 800px;
+    }
+
+    section {
+      margin-bottom: 3rem;
+      scroll-margin-top: 100px;
+    }
+
+    h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin: 1.5rem 0 0.5rem 0;
+    }
+
+    p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      line-height: 1.7;
+    }
+
+    ul, ol {
+      margin-left: 1.5rem;
+      margin-bottom: 1rem;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    li {
+      margin-bottom: 0.5rem;
+    }
+
+    code {
+      font-family: monospace;
+      background-color: var(--code-bg);
+      padding: 0.1rem 0.3rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      background-color: var(--card-bg);
+      padding: 3rem 2rem;
+      margin-top: 4rem;
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+
+    .footer-left {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 1.5rem;
+      list-style: none;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 550;
+      transition: color 0.15s ease;
+    }
+
+    .footer-links a:hover {
+      color: var(--primary);
+    }
+
+    @media (max-width: 640px) {
+      .footer-content {
+        flex-direction: column;
+        text-align: center;
+      }
+      .footer-links {
+        justify-content: center;
+      }
+    }
+
+    /* Print styling */
+    @media print {
+      body {
+        background-color: white;
+        color: black;
+      }
+      .navbar, aside, footer, .portal-link {
+        display: none !important;
+      }
+      .container {
+        grid-template-columns: 1fr;
+        padding: 0;
+      }
+      main {
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <a href="/" class="brand">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
+        </svg>
+      </div>
+      <span>DDS</span>
+    </a>
+    <a href="/login" class="portal-link">Developer Portal</a>
+  </header>
+
+  <!-- Container -->
+  <div class="container">
+    
+    <!-- Header Title Panel -->
+    <div class="header-panel">
+      <span class="badge">Legal Document</span>
+      <h1>Terms & Conditions</h1>
+      <div class="meta">Last Updated: July 19, 2026 &bull; Version 2.0.0</div>
+    </div>
+
+    <!-- Table of Contents -->
+    <aside>
+      <div class="toc-title">On this page</div>
+      <ul class="toc-list">
+        <li><a href="#acceptance" class="toc-link">1. Acceptance of Terms</a></li>
+        <li><a href="#eligibility" class="toc-link">2. Eligibility</a></li>
+        <li><a href="#accounts" class="toc-link">3. Developer Accounts</a></li>
+        <li><a href="#api-keys" class="toc-link">4. API Keys & Credentials</a></li>
+        <li><a href="#billing" class="toc-link">5. Billing & Quota Limits</a></li>
+        <li><a href="#suspension" class="toc-link">6. Suspension & Grace Period</a></li>
+        <li><a href="#prohibited" class="toc-link">7. Prohibited Activities</a></li>
+        <li><a href="#intellectual-property" class="toc-link">8. Intellectual Property</a></li>
+        <li><a href="#disclaimer" class="toc-link">9. Disclaimers & Warranties</a></li>
+        <li><a href="#liability" class="toc-link">10. Limitation of Liability</a></li>
+        <li><a href="#indemnification" class="toc-link">11. Indemnification</a></li>
+        <li><a href="#governing-law" class="toc-link">12. Governing Law</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main>
+      
+      <section id="acceptance">
+        <h2>1. Acceptance of Terms</h2>
+        <p>
+          By creating an account, registering an application, installing our SDKs, or accessing the Dynamic Decision System ("DDS") APIs, you agree to comply with and be bound by these Developer Terms & Conditions.
+        </p>
+        <p>
+          If you are entering into these terms on behalf of a company or other legal corporate entity, you represent that you have the authority to bind such entity to these terms. If you do not agree to these terms, you are prohibited from utilizing the DDS services.
+        </p>
+      </section>
+
+      <section id="eligibility">
+        <h2>2. Eligibility</h2>
+        <p>
+          You must be at least 18 years of age or the legal age of majority in your jurisdiction to create a developer profile. You represent that you are not on any government trade embargo or sanctions list, and that your use of DDS does not violate any local laws or regulations.
+        </p>
+      </section>
+
+      <section id="accounts">
+        <h2>3. Developer Accounts</h2>
+        <p>
+          To access our APIs, you must register a developer account using Google Single Sign-On (SSO) and verify a valid mobile phone number.
+        </p>
+        <ul>
+          <li>You must provide accurate and complete registration profile information.</li>
+          <li>You are responsible for keeping your developer credentials secure.</li>
+          <li>You are solely responsible for all operations, apps, and charges logged under your developer account credentials.</li>
+        </ul>
+      </section>
+
+      <section id="api-keys">
+        <h2>4. API Keys & Credentials</h2>
+        <p>
+          Upon creating an application in the Developer Portal, we issue unique credentials including a <code>Public Key</code>, <code>Secret Key</code>, and <code>Application ID</code>.
+        </p>
+        <ul>
+          <li><strong>Confidentiality:</strong> Your Secret Key is confidential. You must store it securely in your server-side environment configurations.</li>
+          <li><strong>Exposure:</strong> You must not hardcode API keys or embed Secret Keys in client-side code, frontend mobile repositories, or public web interfaces. Exposed keys are subject to immediate rotation or revocation.</li>
+          <li><strong>Security Audits:</strong> DDS reserves the right to rotate or temporarily disable keys if we detect credential leakage or unauthorized usage patterns.</li>
+        </ul>
+      </section>
+
+      <section id="billing">
+        <h2>5. Billing & Quota Limits</h2>
+        <p>DDS operates on a tiered usage structure:</p>
+        
+        <h3>A. Daily Free Tier</h3>
+        <p>
+          Every developer account receives a daily free allowance of <strong>5 successful authentication requests</strong> across all registered applications. Free usage limits are reset automatically at 12:00 AM daily in accordance with the developer's timezone setting.
+        </p>
+
+        <h3>B. Postpaid Pay As You Go (PAYG)</h3>
+        <p>
+          Once your daily usage exceeds the 5 free requests, you will be billed for subsequent successful verification requests at a rate of <strong>₹0.50 per successful request</strong>. Failed or rejected authentication requests are not billed.
+        </p>
+
+        <h3>C. Invoicing & Card Authorizations</h3>
+        <p>
+          Usage fees are compiled dynamically and invoiced at the end of the billing cycle (month-end). By attaching a credit card, you authorize Stripe and DDS to automatically charge your card on file for invoice balances.
+        </p>
+      </section>
+
+      <section id="suspension">
+        <h2>6. Suspension & Grace Period</h2>
+        <p>We enforce strict payment cycles to maintain our global push-delivery infrastructure:</p>
+        <ul>
+          <li><strong>Failed Payments:</strong> If automatic charging of your payment card fails, your invoice transitions to <code>Payment Pending</code> status.</li>
+          <li><strong>7-Day Grace Period:</strong> You are granted a grace period of seven (7) calendar days from the billing failure date. Your API keys remain fully functional during this period.</li>
+          <li><strong>Service Suspension:</strong> If the invoice remains unpaid after the grace period expires, your developer account is suspended. All authentication requests will be rejected with HTTP code <code>402 Payment Required</code> and error code <code>PAYMENT_REQUIRED</code>.</li>
+          <li><strong>Instant Restoration:</strong> Settling outstanding balances will immediately reactivate all developer applications and credentials automatically.</li>
+        </ul>
+      </section>
+
+      <section id="prohibited">
+        <h2>7. Prohibited Activities</h2>
+        <p>When integrating DDS APIs, you agree not to:</p>
+        <ul>
+          <li>Submit SMS spam, verification looping requests, or automate credential attacks.</li>
+          <li>Reverse engineer, decompile, or attempt to extract source codes from the DDS Server or Mobile application.</li>
+          <li>Share or transfer API keys to unauthorized third parties or reseller networks.</li>
+          <li>Utilize DDS to build competitive phone authentication or mobile push verification platforms.</li>
+        </ul>
+      </section>
+
+      <section id="intellectual-property">
+        <h2>8. Intellectual Property</h2>
+        <p>
+          DDS retains all right, title, and interest in and to the DDS APIs, SDKs, logos, designs, documentation, and the mobile application. We grant you a limited, non-exclusive, non-transferable, revocable license to utilize our SDKs and APIs solely to integrate identity verification within your applications.
+        </p>
+      </section>
+
+      <section id="disclaimer">
+        <h2>9. Disclaimers & Warranties</h2>
+        <p>
+          DDS APIs and SDKs are provided "as is" and "as available". We make no warranties, express or implied, including but not limited to merchantability, fitness for a particular purpose, or non-infringement.
+        </p>
+        <p>
+          We do not guarantee that the DDS verification service will be uninterrupted, timely, secure, or completely error-free, particularly during external mobile network outages.
+        </p>
+      </section>
+
+      <section id="liability">
+        <h2>10. Limitation of Liability</h2>
+        <p>
+          To the maximum extent permitted by applicable law, DDS shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits or revenues, arising out of your use of or inability to use DDS services.
+        </p>
+      </section>
+
+      <section id="indemnification">
+        <h2>11. Indemnification</h2>
+        <p>
+          You agree to defend, indemnify, and hold harmless DDS, its officers, directors, and employees, from and against any claims, damages, obligations, losses, liabilities, costs, or debt arising from your violation of these terms or your integration of the APIs.
+        </p>
+      </section>
+
+      <section id="governing-law">
+        <h2>12. Governing Law</h2>
+        <p>
+          These Terms & Conditions shall be governed by and construed in accordance with the laws of India, without regard to its conflict of law provisions. Any dispute arising under these terms shall be subject to the exclusive jurisdiction of the courts located in Bangalore, India.
+        </p>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-content">
+      <div class="footer-left">
+        &copy; 2026 DDS Authentication Platform &bull; v2.0.0
+      </div>
+      <ul class="footer-links">
+        <li><a href="/legal/privacy-policy.html">Privacy Policy</a></li>
+        <li><a href="/legal/terms-and-conditions.html">Terms & Conditions</a></li>
+        <li><a href="/legal/about-dds.html">About DDS</a></li>
+        <li><a href="/settings/support">Support</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <script>
+    // Highlight active section in TOC on scroll
+    window.addEventListener('DOMContentLoaded', () => {
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          const id = entry.target.getAttribute('id');
+          const tocLink = document.querySelector(`.toc-link[href="#${id}"]`);
+          if (tocLink) {
+            if (entry.isIntersecting) {
+              document.querySelectorAll('.toc-link').forEach(l => l.classList.remove('active'));
+              tocLink.classList.add('active');
+            }
+          }
+        });
+      }, { rootMargin: '-20% 0px -60% 0px' });
+
+      document.querySelectorAll('section').forEach(section => {
+        observer.observe(section);
+      });
+    });
+  </script>
+</body>
+</html>
