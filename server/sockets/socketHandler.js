@@ -8,7 +8,41 @@ const onlineUsers = new Map();
 export const initSocket = (server) => {
   const io = new Server(server, {
     cors: {
-      origin: process.env.CLIENT_URL || '*',
+      origin: (origin, callback) => {
+        const allowedOrigins = [
+          'http://localhost:3000',
+          'http://localhost:5173',
+          'http://localhost:5174',
+          'http://localhost:5176',
+          'http://127.0.0.1:5173',
+          'http://127.0.0.1:5174',
+          'http://127.0.0.1:5176',
+          'https://otp-site-black.vercel.app',
+          'https://visionx2026.duckdns.org'
+        ];
+
+        if (process.env.ALLOWED_ORIGINS) {
+          process.env.ALLOWED_ORIGINS.split(',').forEach(o => allowedOrigins.push(o.trim()));
+        } else {
+          if (process.env.CLIENT_URL) allowedOrigins.push(process.env.CLIENT_URL);
+          if (process.env.DEV_PORTAL_URL) allowedOrigins.push(process.env.DEV_PORTAL_URL);
+        }
+
+        // Allow requests with no origin
+        if (!origin) {
+          return callback(null, true);
+        }
+
+        const isAllowedExact = allowedOrigins.includes(origin);
+        const isAllowedVercelPreview = /^https:\/\/[a-zA-Z0-9-]+\.vercel\.app$/.test(origin);
+
+        if (isAllowedExact || isAllowedVercelPreview) {
+          callback(null, true);
+        } else {
+          console.warn(`[Socket CORS Blocked] Connection from origin: ${origin}`);
+          callback(new Error(`Origin ${origin} not allowed by CORS`));
+        }
+      },
       methods: ['GET', 'POST'],
       credentials: true
     }

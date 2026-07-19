@@ -171,12 +171,15 @@ app.use(
     origin: (origin, callback) => {
       // Local development and standard allowed origins
       const allowedOrigins = [
+        'http://localhost:3000',
         'http://localhost:5173',
         'http://localhost:5174',
         'http://localhost:5176',
         'http://127.0.0.1:5173',
         'http://127.0.0.1:5174',
-        'http://127.0.0.1:5176'
+        'http://127.0.0.1:5176',
+        'https://otp-site-black.vercel.app',
+        'https://visionx2026.duckdns.org'
       ];
 
       // Add environmental variables dynamically if specified
@@ -188,7 +191,14 @@ app.use(
       }
 
       // Allow requests with no origin (like mobile apps, curl, postman)
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      const isAllowedExact = allowedOrigins.includes(origin);
+      const isAllowedVercelPreview = /^https:\/\/[a-zA-Z0-9-]+\.vercel\.app$/.test(origin);
+
+      if (isAllowedExact || isAllowedVercelPreview) {
         callback(null, true);
       } else {
         console.warn(`[CORS Blocked] Request from origin: ${origin}`);
@@ -201,6 +211,7 @@ app.use(
       'Content-Type',
       'Accept',
       'Origin',
+      'X-Requested-With',
       'x-device-id',
       'x-app-id',
       'x-api-key',
