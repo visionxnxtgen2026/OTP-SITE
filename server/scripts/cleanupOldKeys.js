@@ -4,7 +4,8 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const cleanup = async () => {
-  await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/dds');
+  await mongoose.connect(process.env.MONGODB_URI);
+
   const db = mongoose.connection.db;
 
   // Delete old Cartify key with old format

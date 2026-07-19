@@ -1,5 +1,5 @@
 {
-  "name": "@dds/server",
+  "name": "@visionnxtgen2026/server",
   "version": "1.0.0",
   "description": "Official DDS Backend SDK — plug-and-play push-based authentication for Node.js, Express, Fastify, NestJS",
   "main": "./dist/index.js",
@@ -48,4 +48,3 @@
     "node": ">=16.0.0"
   }
 }
-

@@ -16,7 +16,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 dotenv.config({ path: join(__dirname, '..', '.env') });
 
-const MONGO_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/dds-auth';
+const MONGO_URI = process.env.MONGODB_URI;
+
 
 async function migrate() {
   await mongoose.connect(MONGO_URI);
