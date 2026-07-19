@@ -1,8 +1,8 @@
+import 'dotenv/config';
 import express from 'express';
 import http from 'http';
 import cors from 'cors';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
 
 // Database & Services Configurations
 import connectDB from './config/db.js';
@@ -21,9 +21,6 @@ import Client from './models/clientModel.js';
 
 // Central Error Handlers
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
-
-// Load environmental variables
-dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
