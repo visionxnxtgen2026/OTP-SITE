@@ -223,6 +223,7 @@ export const detectUserCountryAsync = async () => {
 
   // 4. IP-based country detection from backend/API as final fallback
   try {
+    // Note: Since developers frontend routes to MERN backend, `/api/config/ip-country` works here too
     const response = await fetch('/api/config/ip-country');
     if (response.ok) {
       const data = await response.json();

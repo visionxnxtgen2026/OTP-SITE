@@ -11,7 +11,7 @@ import { toast } from 'react-hot-toast';
 import { auth } from '../services/firebase';
 import { useAuthStore } from '../store/authStore';
 import { cleanPhoneInput } from '../utils/formatting';
-import { detectUserCountry, countriesList } from '../utils/countries';
+import { detectUserCountryAsync, countriesList } from '../utils/countries';
 import CustomCountryPicker from '../components/CustomCountryPicker';
 
 export const VerifyMobile = () => {
@@ -19,8 +19,9 @@ export const VerifyMobile = () => {
   const { tempVerificationCountry, setTempVerificationData } = useAuthStore();
   
   // Custom states
-  const [country, setCountry] = useState(tempVerificationCountry);
+  const [country, setCountry] = useState(tempVerificationCountry || null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDetectingCountry, setIsDetectingCountry] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [validation, setValidation] = useState({ isValid: false, message: '' });
 
@@ -39,15 +40,29 @@ export const VerifyMobile = () => {
 
   // Detect user locale on initial mount
   useEffect(() => {
-    if (!tempVerificationCountry || tempVerificationCountry.iso === 'US') {
-      const detected = detectUserCountry();
-      setCountry(detected);
-      setTempVerificationData({ country: detected });
+    const detect = async () => {
+      setIsDetectingCountry(true);
+      try {
+        const detected = await detectUserCountryAsync();
+        setCountry(detected);
+        setTempVerificationData({ country: detected });
+      } catch (err) {
+        console.error('Failed to detect country:', err);
+      } finally {
+        setIsDetectingCountry(false);
+      }
+    };
+    if (!tempVerificationCountry) {
+      detect();
     }
   }, []);
 
   // Validate the phone number dynamically using libphonenumber-js or strict Indian mobile rules
   useEffect(() => {
+    if (!country) {
+      setValidation({ isValid: false, message: '' });
+      return;
+    }
     const cleanNumber = cleanPhoneInput(phoneValue || '');
     if (!cleanNumber) {
       setValidation({ isValid: false, message: '' });
@@ -234,17 +249,26 @@ export const VerifyMobile = () => {
                 isFocused ? 'border-primary ring-4 ring-blue-500/10' : 'border-gray-200'
               }`}
             >
-              {/* Minimal Flag selector (only flag + Chevron down) */}
-              <CustomCountryPicker
-                selectedIso={country.iso}
-                onChange={handleCountryChange}
-                minimal={true}
-              />
+              {isDetectingCountry || !country ? (
+                <div className="flex items-center gap-1.5 px-3 py-3 text-xs text-gray-500 select-none">
+                  <Loader2 size={12} className="animate-spin text-blue-600" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider">Detecting...</span>
+                </div>
+              ) : (
+                <>
+                  {/* Minimal Flag selector (only flag + Chevron down) */}
+                  <CustomCountryPicker
+                    selectedIso={country.iso}
+                    onChange={handleCountryChange}
+                    minimal={true}
+                  />
 
-              {/* Read-only dialed code */}
-              <span className="text-xs font-extrabold text-[#111827] pl-1.5 pr-3 select-none">
-                {country.code}
-              </span>
+                  {/* Read-only dialed code */}
+                  <span className="text-xs font-extrabold text-[#111827] pl-1.5 pr-3 select-none">
+                    {country.code}
+                  </span>
+                </>
+              )}
 
               {/* Vertical line divider */}
               <div className="h-6 w-[1px] bg-gray-250/70" />

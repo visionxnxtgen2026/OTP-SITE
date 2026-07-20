@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
-import { parsePhoneNumberFromString } from 'libphonenumber-js';
+import { parsePhoneNumberFromString, AsYouType } from 'libphonenumber-js';
 import { Phone, ShieldCheck, Loader2, ArrowRight } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { auth } from '../services/firebase';
 import api from '../services/api';
 import { useDevStore } from '../store/devStore';
+import { detectUserCountryAsync, countriesList } from '../utils/countries';
+import CustomCountryPicker from '../components/CustomCountryPicker';
+import { cleanPhoneInput } from '../utils/formatting';
 
 export const Onboarding = () => {
   const navigate = useNavigate();
@@ -14,7 +17,10 @@ export const Onboarding = () => {
 
   const [step, setStep] = useState('phone'); // 'phone' | 'otp'
   const [phone, setPhone] = useState('');
-  const [dialCode, setDialCode] = useState('+91');
+  const [country, setCountry] = useState(null);
+  const [isDetectingCountry, setIsDetectingCountry] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const [validation, setValidation] = useState({ isValid: false, message: '' });
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [confirmation, setConfirmation] = useState(null);
@@ -25,6 +31,105 @@ export const Onboarding = () => {
     if (developer?.mobileVerified) navigate('/dashboard');
   }, [developer?.mobileVerified, navigate]);
 
+  // Detect user locale on initial mount
+  useEffect(() => {
+    const detect = async () => {
+      setIsDetectingCountry(true);
+      try {
+        const detected = await detectUserCountryAsync();
+        setCountry(detected);
+      } catch (err) {
+        console.error('Failed to detect country:', err);
+      } finally {
+        setIsDetectingCountry(false);
+      }
+    };
+    detect();
+  }, []);
+
+  // Validate the phone number dynamically using libphonenumber-js or strict Indian mobile rules
+  useEffect(() => {
+    if (!country) {
+      setValidation({ isValid: false, message: '' });
+      return;
+    }
+    const cleanNumber = cleanPhoneInput(phone);
+    if (!cleanNumber) {
+      setValidation({ isValid: false, message: '' });
+      return;
+    }
+
+    // 1. Strict validation rule for India
+    if (country.iso === 'IN') {
+      if (cleanNumber.length !== 10 || !/^[6-9]/.test(cleanNumber)) {
+        setValidation({ isValid: false, message: 'Please enter a valid mobile number.' });
+        return;
+      }
+      setValidation({ isValid: true, message: '✔ Valid Number' });
+      return;
+    }
+
+    // 2. International standard validation using libphonenumber-js
+    try {
+      const parsed = parsePhoneNumberFromString(cleanNumber, country.iso);
+      if (parsed && parsed.isValid()) {
+        setValidation({ isValid: true, message: '✔ Valid Number' });
+      } else {
+        setValidation({ isValid: false, message: 'Please enter a valid mobile number.' });
+      }
+    } catch (err) {
+      setValidation({ isValid: false, message: 'Please enter a valid mobile number.' });
+    }
+  }, [phone, country]);
+
+  // Handle selected country changes
+  const handleCountryChange = (selected) => {
+    setCountry(selected);
+    if (phone) {
+      const cleanVal = cleanPhoneInput(phone);
+      const formatted = new AsYouType(selected.iso).input(cleanVal);
+      setPhone(formatted);
+    }
+  };
+
+  // Parse phone number dynamically on changes, pastes, and browser autofills
+  const handlePhoneChange = (e) => {
+    const rawVal = e.target.value;
+    let testVal = rawVal.trim();
+
+    // Standardize 00 prefix to + prefix for international resolution
+    if (testVal.startsWith('00')) {
+      testVal = '+' + testVal.slice(2);
+    }
+
+    try {
+      // 1. Attempt international parse if it starts with a plus code prefix
+      if (testVal.startsWith('+') && country) {
+        const parsed = parsePhoneNumberFromString(testVal);
+        if (parsed && parsed.country) {
+          const matchedCountry = countriesList.find((c) => c.iso === parsed.country);
+          if (matchedCountry) {
+            setCountry(matchedCountry);
+            const national = parsed.nationalNumber;
+            setPhone(new AsYouType(matchedCountry.iso).input(national));
+            return;
+          }
+        }
+      }
+      
+      // 2. Fallback: Parse or clean digits and format as you type under selected country
+      const cleanVal = cleanPhoneInput(rawVal);
+      const formatted = new AsYouType(country ? country.iso : 'IN').input(cleanVal);
+      setPhone(formatted);
+
+    } catch (err) {
+      console.warn('[Autofill Phone Parse Warning]', err.message);
+      const cleanVal = cleanPhoneInput(rawVal);
+      const formatted = new AsYouType(country ? country.iso : 'IN').input(cleanVal);
+      setPhone(formatted);
+    }
+  };
+
   const setupRecaptcha = () => {
     if (!window.devRecaptchaVerifier) {
       window.devRecaptchaVerifier = new RecaptchaVerifier(auth, 'dev-recaptcha', {
@@ -34,12 +139,12 @@ export const Onboarding = () => {
   };
 
   const handleSendOtp = async () => {
-    const fullNumber = `${dialCode}${phone.replace(/\D/g, '')}`;
-    const parsed = parsePhoneNumberFromString(fullNumber);
-    if (!parsed?.isValid()) {
-      toast.error('Please enter a valid international phone number.');
-      return;
+    if (!country) return;
+    let rawNumber = cleanPhoneInput(phone);
+    if (rawNumber.startsWith('0')) {
+      rawNumber = rawNumber.slice(1);
     }
+    const fullNumber = `${country.code}${rawNumber}`;
 
     if (!auth) {
       toast.error('Firebase is not configured.');
@@ -70,16 +175,23 @@ export const Onboarding = () => {
       toast.error('Enter the 6-digit code.');
       return;
     }
+    if (!country) return;
     setIsLoading(true);
     const tid = toast.loading('Verifying...');
     try {
       await confirmation.confirm(otp);
-      const fullNumber = `${dialCode}${phone.replace(/\D/g, '')}`;
+      let rawNumber = cleanPhoneInput(phone);
+      if (rawNumber.startsWith('0')) {
+        rawNumber = rawNumber.slice(1);
+      }
+      const fullNumber = `${country.code}${rawNumber}`;
 
       // Link phone to developer account
       await api.post('/api/dev/auth/verify-phone', {
         phoneNumber: fullNumber,
-        countryCode: dialCode
+        countryCode: country.code,
+        countryISO: country.iso,
+        countryName: country.name
       });
 
       updateDeveloper({ mobileVerified: true, phoneNumber: fullNumber });
@@ -113,29 +225,54 @@ export const Onboarding = () => {
         {step === 'phone' ? (
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Dial Code</label>
-              <input
-                type="text"
-                value={dialCode}
-                onChange={(e) => setDialCode(e.target.value)}
-                placeholder="+91"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 font-medium"
-              />
-            </div>
-            <div className="space-y-1.5">
               <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Mobile Number</label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="98765 43210"
-                autoComplete="tel"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 font-medium"
-              />
+              
+              <div 
+                className={`w-full flex items-center border rounded-xl transition-all duration-200 bg-white ${
+                  isFocused ? 'border-blue-500 ring-2 ring-blue-500/10' : 'border-gray-200'
+                }`}
+              >
+                {isDetectingCountry || !country ? (
+                  <div className="flex items-center gap-1.5 px-4 py-3 text-xs text-gray-500 select-none">
+                    <Loader2 size={12} className="animate-spin text-blue-600" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Detecting...</span>
+                  </div>
+                ) : (
+                  <>
+                    <CustomCountryPicker
+                      selectedIso={country.iso}
+                      onChange={handleCountryChange}
+                      minimal={true}
+                    />
+                    <span className="text-sm font-medium text-gray-900 pr-3 select-none">
+                      {country.code}
+                    </span>
+                  </>
+                )}
+
+                <div className="h-6 w-[1px] bg-gray-200" />
+
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={handlePhoneChange}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
+                  placeholder="98765 43210"
+                  autoComplete="tel"
+                  className="flex-grow px-3 py-3 bg-transparent text-sm font-medium text-gray-900 outline-none w-full"
+                />
+              </div>
+
+              {phone && !validation.isValid && (
+                <p className="text-[10px] font-bold text-red-500 pl-1 mt-1">
+                  {validation.message}
+                </p>
+              )}
             </div>
             <button
               onClick={handleSendOtp}
-              disabled={isLoading || !phone}
+              disabled={isLoading || !validation.isValid || isDetectingCountry}
               className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-100 disabled:text-gray-400 text-white rounded-xl text-sm font-semibold transition-all"
             >
               {isLoading ? <Loader2 size={15} className="animate-spin" /> : <ArrowRight size={15} />}
