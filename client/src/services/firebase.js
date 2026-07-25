@@ -1,33 +1,8 @@
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+/**
+ * Firebase Services Adapter (Re-exports canonical Firebase SDK module)
+ * @see ../firebase/firebase.js
+ */
+import app, { auth, db, storage, analytics, googleProvider } from '../firebase/firebase.js';
 
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
-};
-
-let app;
-let auth = null;
-
-try {
-  // Always initialize if apiKey is present (non-empty)
-  if (firebaseConfig.apiKey && firebaseConfig.apiKey !== 'your_firebase_web_api_key' && firebaseConfig.apiKey !== 'undefined') {
-    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-    auth = getAuth(app);
-    console.log('[Firebase Client] SDK initialized successfully.');
-  } else {
-    console.warn(
-      '[Firebase Client] Warning: Firebase Web SDK is not configured yet. ' +
-      'Please check your client/.env file keys.'
-    );
-  }
-} catch (error) {
-  console.error('[Firebase Client] Initialization error:', error.message);
-}
-
-export { auth };
+export { app, auth, db, storage, analytics, googleProvider };
 export default app;

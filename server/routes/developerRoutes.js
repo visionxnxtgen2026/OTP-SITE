@@ -22,7 +22,9 @@ import {
 } from '../controllers/developerController.js';
 import {
   getOverallAnalytics,
-  getAppAnalytics
+  getAppAnalytics,
+  getDashboardStats,
+  getApiLogs
 } from '../controllers/developerAnalyticsController.js';
 import {
   getBillingSummary,
@@ -69,7 +71,9 @@ router.patch('/apps/:appId/keys/:keyId', protectDeveloper, requireMobileVerified
 router.delete('/apps/:appId/keys/:keyId', protectDeveloper, requireMobileVerified, deleteApiKey);
 router.post('/apps/:appId/keys/:keyId/rotate', protectDeveloper, requireMobileVerified, rotateApiKey);
 
-// ─── Analytics ────────────────────────────────────────────────────────────────
+// ─── Analytics & Dashboard ───────────────────────────────────────────────────
+router.get('/dashboard', protectDeveloper, requireMobileVerified, getDashboardStats);
+router.get('/logs', protectDeveloper, requireMobileVerified, getApiLogs);
 router.get('/analytics', protectDeveloper, requireMobileVerified, getOverallAnalytics);
 router.get('/apps/:appId/analytics', protectDeveloper, requireMobileVerified, getAppAnalytics);
 

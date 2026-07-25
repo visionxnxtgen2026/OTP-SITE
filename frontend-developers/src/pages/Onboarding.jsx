@@ -4,7 +4,7 @@ import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 import { parsePhoneNumberFromString, AsYouType } from 'libphonenumber-js';
 import { Phone, ShieldCheck, Loader2, ArrowRight } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { auth } from '../services/firebase';
+import { auth } from '../firebase/firebase';
 import api from '../services/api';
 import { useDevStore } from '../store/devStore';
 import { detectUserCountryAsync, countriesList } from '../utils/countries';

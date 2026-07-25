@@ -203,3 +203,111 @@ export const getAppAnalytics = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * GET /api/dev/dashboard
+ * Return data for all 9 mandatory developer dashboard cards (Part 10).
+ */
+export const getDashboardStats = async (req, res, next) => {
+  try {
+    const devId = req.developer._id;
+    const VerificationRequest = (await import('../models/requestModel.js')).default;
+
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const [apps, todayLogs, monthLogs, pendingCount, recentLogs] = await Promise.all([
+      Application.find({ developerId: devId }),
+      ApiRequestLog.countDocuments({ developerId: devId, timestamp: { $gte: startOfToday } }),
+      ApiRequestLog.aggregate([
+        { $match: { developerId: devId, timestamp: { $gte: startOfMonth } } },
+        {
+          $group: {
+            _id: null,
+            count: { $sum: 1 },
+            successCount: { $sum: { $cond: [{ $eq: ['$status', 'SUCCESS'] }, 1, 0] } },
+            costPaise: { $sum: '$cost' }
+          }
+        }
+      ]),
+      VerificationRequest.countDocuments({
+        clientId: { $in: (await Application.find({ developerId: devId })).map(a => a.applicationId) },
+        status: 'PENDING'
+      }),
+      ApiRequestLog.find({ developerId: devId })
+        .sort({ timestamp: -1 })
+        .limit(10)
+        .lean()
+    ]);
+
+    const monthAgg = monthLogs[0] || { count: 0, successCount: 0, costPaise: 0 };
+    const successRate = monthAgg.count > 0 ? Math.round((monthAgg.successCount / monthAgg.count) * 100) : 100;
+
+    const activeAppCount = apps.filter(a => a.status === 'active').length;
+    const totalAppCount = apps.length;
+
+    res.status(200).json({
+      success: true,
+      cards: {
+        applications: totalAppCount,
+        todayRequests: todayLogs,
+        successRate: `${successRate}%`,
+        currentMonthUsage: monthAgg.count,
+        currentMonthBill: `₹${(monthAgg.costPaise / 100).toFixed(2)}`,
+        pendingRequests: pendingCount,
+        apiHealth: '100% Operational',
+        recentActivityCount: recentLogs.length,
+        applicationStatus: `${activeAppCount}/${totalAppCount} Active`
+      },
+      recentActivity: recentLogs
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /api/dev/logs
+ * Retrieve paginated API request logs with filters.
+ */
+export const getApiLogs = async (req, res, next) => {
+  try {
+    const devId = req.developer._id;
+    const { appId, status, userDecision, page = 1, limit = 20 } = req.query;
+
+    const filter = { developerId: devId };
+    if (appId) filter.applicationIdStr = appId;
+    if (status) filter.status = status.toUpperCase();
+    if (userDecision) filter.userDecision = userDecision;
+
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const [logs, total] = await Promise.all([
+      ApiRequestLog.find(filter)
+        .sort({ timestamp: -1 })
+        .skip(skip)
+        .limit(Number(limit))
+        .lean(),
+      ApiRequestLog.countDocuments(filter)
+    ]);
+
+    res.status(200).json({
+      success: true,
+      logs,
+      pagination: {
+        total,
+        page: Number(page),
+        pages: Math.ceil(total / Number(limit))
+      }
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+

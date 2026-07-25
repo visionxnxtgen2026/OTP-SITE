@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard — Demo Website</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Ambient Glow Effects -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+
+  <div class="app-layout">
+    <div class="glass-card dashboard-card">
+      <div class="status-icon-wrapper icon-success" style="width: 72px; height: 72px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 36px; height: 36px;">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      </div>
+
+      <h1 class="card-title">Welcome User</h1>
+      <p class="card-subtitle">Sample Third-Party Application Authenticated Session</p>
+
+      <div class="welcome-box">
+        <h3>DDS Authentication Successful</h3>
+        <p>Your identity has been verified via the official DDS Push Authentication Platform.</p>
+      </div>
+
+      <button id="logoutBtn" class="btn-primary" onclick="window.location.href='index.html'">
+        Logout
+      </button>
+
+      <div class="card-footer">
+        <div class="security-note">
+          🔒 Powered by official @dds/node-sdk
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

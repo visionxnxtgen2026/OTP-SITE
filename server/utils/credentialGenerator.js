@@ -36,14 +36,23 @@ export const generateSecureRandomBase62 = (length = 32) => {
 
 /**
  * Generate cryptographically secure Application ID
- * Prefix: app_
- * Random length: 28 URL-safe characters (range 24–32)
- * Example: app_6G7mQaX92PkLd8RfTyV4NcZh
+ * Prefix: dds_app_
+ * Example: dds_app_7YyVGCRnhOGrk2NQ
  */
-export const generateApplicationId = (randomLength = 28) => {
-  const len = Math.max(24, Math.min(32, randomLength));
-  return `app_${generateSecureRandomBase62(len)}`;
+export const generateApplicationId = (randomLength = 16) => {
+  const len = Math.max(16, Math.min(32, randomLength));
+  return `dds_app_${generateSecureRandomBase62(len)}`;
 };
+
+/**
+ * Generate cryptographically secure Authentication Request ID
+ * Prefix: auth_
+ * Example: auth_01JXYZ123ABC456DEF
+ */
+export const generateAuthenticationId = (randomLength = 18) => {
+  return `auth_${generateSecureRandomBase62(randomLength)}`;
+};
+
 
 /**
  * Generate cryptographically secure Public API Key

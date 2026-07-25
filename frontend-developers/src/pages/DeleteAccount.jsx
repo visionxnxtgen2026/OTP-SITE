@@ -17,7 +17,7 @@ import { signInWithPhoneNumber, RecaptchaVerifier, GoogleAuthProvider, reauthent
 
 // Local services & stores
 import { useDevStore } from '../store/devStore';
-import { auth } from '../services/firebase';
+import { auth } from '../firebase/firebase';
 import api from '../services/api';
 
 export const DeleteAccount = () => {

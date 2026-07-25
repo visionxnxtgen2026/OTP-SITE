@@ -7,7 +7,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 // Local Routes & State Stores
 import { AppRoutes } from './routes/AppRoutes';
 import { useAuthStore } from './store/authStore';
-import { auth } from './services/firebase';
+import { auth } from './firebase/firebase';
 
 // Pages
 import SplashScreen from './pages/SplashScreen';

@@ -264,12 +264,6 @@ export const verifyApprovalCode = async (req, res, next) => {
             status: 'Rejected',
             reason: 'max_attempts_exceeded'
           }, { timeout: 3000 }).catch(() => {});
-        } else if (request.clientId === 'app_cartify_123') {
-          axios.post('http://localhost:5001/api/callback', {
-            requestId: request.verificationId,
-            status: 'Rejected',
-            reason: 'max_attempts_exceeded'
-          }, { timeout: 3000 }).catch(() => {});
         }
 
         // Notify all sockets for this user
@@ -370,10 +364,19 @@ export const approveSecureVerification = async (req, res, next) => {
     // Approve & store entered code
     request.status = 'APPROVED';
     request.approved = true;
+    request.approvedAt = new Date();
+    request.approvedBy = currentUser.ddsId || currentUser._id;
     if (codeVal) {
       request.enteredCode = codeVal;
     }
     await request.save();
+
+    console.log(`\n==========================================================`);
+    console.log(`[DDS Approval Flow] Authentication Request Approved: ${request.verificationId}`);
+    console.log(`  User: ${currentUser.displayName || currentUser.email} (${request.approvedBy})`);
+    console.log(`  Application: ${request.clientName} (${request.clientId})`);
+    console.log(`  Status: APPROVED | Approved At: ${request.approvedAt.toISOString()}`);
+    console.log(`==========================================================\n`);
 
     // ─── Deduct cost & log request for developer metrics ───
     try {
@@ -416,16 +419,28 @@ export const approveSecureVerification = async (req, res, next) => {
 
     // Broadcast success instantly over socket
     const socketHelpers = req.app.get('socketHelpers');
+    const io = req.app.get('io');
+
+    const approvalPayload = {
+      authenticationId: request.verificationId,
+      verificationRequestId: request.verificationId,
+      status: 'approved',
+      approved: true,
+      developerId: request.clientId,
+      applicationId: request.clientId,
+      clientName: request.clientName,
+      enteredCode: request.enteredCode || codeVal,
+      resolvedAt: request.approvedAt
+    };
+
     if (socketHelpers) {
-      socketHelpers.emitToUser(userId, 'verification-approved', {
-        verificationRequestId: request.verificationId,
-        clientName: request.clientName,
-        ddsId: request.ddsId,
-        status: 'APPROVED',
-        approved: true,
-        enteredCode: request.enteredCode || codeVal,
-        resolvedAt: request.updatedAt
-      });
+      socketHelpers.emitToUser(userId, 'verification-approved', approvalPayload);
+      socketHelpers.emitToUser(userId, 'authentication_status_changed', approvalPayload);
+    }
+
+    if (io) {
+      io.to(request.verificationId).to(request.clientId).emit('authentication_status_changed', approvalPayload);
+      io.to(request.verificationId).to(request.clientId).emit('verification-approved', approvalPayload);
     }
 
     // Trigger Webhook Callback (STEP 8 Relay)

@@ -1,10 +1,9 @@
 {
-  "name": "@visionnxtgen2026/server",
+  "name": "@dds/node-sdk",
   "version": "1.0.0",
-  "description": "Official DDS Backend SDK — plug-and-play push-based authentication for Node.js, Express, Fastify, NestJS",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
+  "description": "Official DDS Backend SDK — plug-and-play push-based authentication for Node.js",
+  "main": "./src/index.js",
+  "types": "./index.d.ts",
   "bin": {
     "dds": "./bin/dds.js"
   },

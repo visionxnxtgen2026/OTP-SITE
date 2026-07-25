@@ -6,7 +6,7 @@ import { Loader2, Shield } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 // Local Services & State
-import { auth } from '../services/firebase';
+import { auth } from '../firebase/firebase';
 import { useAuthStore } from '../store/authStore';
 import api from '../services/api';
 

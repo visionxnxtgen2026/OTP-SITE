@@ -4,7 +4,7 @@ import {
   Search, Copy, Check, ChevronRight, ShieldCheck, Zap, Lock,
   Code2, Terminal, Server, AlertTriangle, HelpCircle, History,
   LifeBuoy, CheckCircle2, Cpu, Menu, X, Rocket, ArrowRight,
-  ArrowLeft, Sun, Moon, Link2
+  ArrowLeft, Sun, Moon, Link2, DollarSign
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import api from '../services/api';

@@ -1,4 +1,4 @@
-import admin from 'firebase-admin';
+import { getFirebaseAdmin } from '../config/firebase.js';
 import Developer from '../models/developerModel.js';
 import { generateToken, verifyToken } from '../services/tokenService.js';
 
@@ -9,44 +9,101 @@ import { generateToken, verifyToken } from '../services/tokenService.js';
  */
 export const developerGoogleLogin = async (req, res, next) => {
   try {
-    const { idToken } = req.body;
+    const idToken = req.body.idToken || req.body.firebaseToken;
+
+    console.log('==========================================');
+    console.log('Google Login Request');
+    console.log('');
+    console.log('\u2713 Request Received');
+
     if (!idToken) {
-      return res.status(400).json({ success: false, message: 'Firebase ID token is required.' });
+      console.error('\u2717 Firebase ID token missing in request body');
+      console.log('==========================================\n');
+      return res.status(400).json({
+        success: false,
+        message: 'Firebase ID token is required in request body.'
+      });
     }
 
-    // Verify token with Firebase Admin
-    const decoded = await admin.auth().verifyIdToken(idToken);
+    console.log('\u2713 Firebase Token Present');
+
+    // 1. Resolve Firebase Admin SDK instance
+    const admin = getFirebaseAdmin();
+
+    // 2. Verify token with Firebase Admin
+    let decoded;
+    try {
+      decoded = await admin.auth().verifyIdToken(idToken);
+      console.log('\u2713 Token Verified');
+    } catch (tokenErr) {
+      console.error('==========================================');
+      console.error('Google Login Failed');
+      console.error('');
+      console.error(`Reason: ${tokenErr.message}`);
+      console.error(`Stack Trace: ${tokenErr.stack}`);
+      console.error('File: server/controllers/developerAuthController.js');
+      console.error('Function: developerGoogleLogin');
+      console.error('Recommended Fix: Re-authenticate client-side to obtain a fresh Firebase ID Token.');
+      console.error('==========================================\n');
+
+      return res.status(401).json({
+        success: false,
+        message: 'Firebase token verification failed. Please sign in again.',
+        error: tokenErr.message
+      });
+    }
+
     const { uid, email, name, picture } = decoded;
 
     if (!email) {
-      return res.status(400).json({ success: false, message: 'A verified email address is required.' });
+      return res.status(400).json({
+        success: false,
+        message: 'A verified email address is required from Google Authentication.'
+      });
     }
 
-    // Upsert developer record in 'developers' collection
+    // 3. Upsert developer record in 'developers' collection
     let developer = await Developer.findOne({ firebaseUid: uid });
 
     if (!developer) {
-      developer = await Developer.create({
-        firebaseUid: uid,
-        email,
-        displayName: name || email.split('@')[0],
-        photoURL: picture || null,
-        lastLogin: new Date()
-      });
-      console.log(`[Developer Auth] New developer registered: ${email}`);
+      // Check if developer exists under same email address to merge
+      developer = await Developer.findOne({ email: email.toLowerCase() });
+      if (developer) {
+        developer.firebaseUid = uid;
+        if (name && !developer.displayName) developer.displayName = name;
+        if (picture && !developer.photoURL) developer.photoURL = picture;
+        developer.lastLogin = new Date();
+        await developer.save();
+        console.log(`\u2713 Developer Found & Merged: ${email}`);
+      } else {
+        developer = await Developer.create({
+          firebaseUid: uid,
+          email: email.toLowerCase(),
+          displayName: name || email.split('@')[0],
+          photoURL: picture || null,
+          lastLogin: new Date()
+        });
+        console.log(`\u2713 Developer Created: ${email}`);
+      }
     } else {
       developer.lastLogin = new Date();
       if (name && !developer.displayName) developer.displayName = name;
       if (picture && !developer.photoURL) developer.photoURL = picture;
       await developer.save();
+      console.log(`\u2713 Developer Found: ${email}`);
     }
 
-    // Issue developer-scoped JWT
+    // 4. Issue developer-scoped JWT
     const token = generateToken({
       id: developer._id.toString(),
-      type: 'developer', // Distinguishes from mobile user tokens
+      type: 'developer',
       developerId: developer.developerId
     });
+
+    console.log('\u2713 JWT Generated');
+    console.log('');
+    console.log('Login Successful');
+    console.log('==========================================\n');
 
     res.status(200).json({
       success: true,
@@ -68,19 +125,29 @@ export const developerGoogleLogin = async (req, res, next) => {
         updatedAt: developer.updatedAt
       }
     });
+
   } catch (error) {
-    console.error('[Developer Auth] Login error:', error.message);
-    if (error.code === 'auth/id-token-expired') {
-      return res.status(401).json({ success: false, message: 'Firebase token has expired. Please sign in again.' });
-    }
-    next(error);
+    console.error('==========================================');
+    console.error('Google Login Failed');
+    console.error('');
+    console.error(`Reason: ${error.message}`);
+    console.error(`Stack Trace: ${error.stack}`);
+    console.error('File: server/controllers/developerAuthController.js');
+    console.error('Function: developerGoogleLogin');
+    console.error('Recommended Fix: Check server logs and MongoDB database connection.');
+    console.error('==========================================\n');
+
+    res.status(500).json({
+      success: false,
+      message: 'Internal Server Error during Google Login.',
+      error: error.message
+    });
   }
 };
 
 /**
  * POST /api/dev/auth/verify-phone
  * Link a verified mobile number to the developer account.
- * Mobile number must be globally unique across all developer accounts.
  */
 export const developerVerifyPhone = async (req, res, next) => {
   try {
@@ -91,7 +158,6 @@ export const developerVerifyPhone = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Phone number is required.' });
     }
 
-    // Enforce global uniqueness across all developer accounts
     const existingDev = await Developer.findOne({
       phoneNumber,
       _id: { $ne: developerId }
@@ -134,7 +200,6 @@ export const developerVerifyPhone = async (req, res, next) => {
 
 /**
  * GET /api/dev/auth/profile or GET /api/dev/auth/me
- * Return the authenticated developer's profile.
  */
 export const getDeveloperProfile = async (req, res) => {
   const dev = req.developer;
@@ -163,7 +228,6 @@ export const getDeveloperProfile = async (req, res) => {
 
 /**
  * PATCH /api/dev/auth/profile or PATCH /api/dev/auth/me
- * Update developer profile fields.
  */
 export const updateDeveloperProfile = async (req, res, next) => {
   try {
@@ -197,7 +261,6 @@ export const updateDeveloperProfile = async (req, res, next) => {
 
 /**
  * POST /api/dev/auth/logout
- * Log out the developer session.
  */
 export const developerLogout = async (req, res) => {
   res.status(200).json({
@@ -208,7 +271,6 @@ export const developerLogout = async (req, res) => {
 
 /**
  * POST /api/dev/auth/refresh
- * Issue a fresh developer JWT if a valid token is supplied.
  */
 export const refreshToken = async (req, res, next) => {
   try {
@@ -252,7 +314,6 @@ export const refreshToken = async (req, res, next) => {
 
 /**
  * DELETE /api/dev/auth/me
- * Permanently deletes the authenticated developer account and cascades.
  */
 export const deleteDeveloperAccount = async (req, res, next) => {
   try {
@@ -266,8 +327,7 @@ export const deleteDeveloperAccount = async (req, res, next) => {
       });
     }
 
-    // 1. Resolve Firebase Admin SDK and verify token
-    const admin = (await import('../config/firebase.js')).getFirebaseAdmin();
+    const admin = getFirebaseAdmin();
     let decoded;
     try {
       decoded = await admin.auth().verifyIdToken(firebaseIdToken, true);
@@ -278,7 +338,6 @@ export const deleteDeveloperAccount = async (req, res, next) => {
       });
     }
 
-    // Confirm token belongs to the developer
     if (decoded.uid !== req.developer.firebaseUid) {
       return res.status(403).json({
         success: false,
@@ -286,7 +345,6 @@ export const deleteDeveloperAccount = async (req, res, next) => {
       });
     }
 
-    // 2. Cascade delete developer models
     const Application = (await import('../models/applicationModel.js')).default;
     const ApiKey = (await import('../models/apiKeyModel.js')).default;
     const ApiRequestLog = (await import('../models/apiRequestLogModel.js')).default;
@@ -297,7 +355,6 @@ export const deleteDeveloperAccount = async (req, res, next) => {
     await Application.deleteMany({ developerId: devId });
     await Invoice.deleteMany({ developerId: devId });
 
-    // 3. Remove from Firebase Authentication
     try {
       await admin.auth().deleteUser(req.developer.firebaseUid);
     } catch (firebaseErr) {
@@ -306,10 +363,6 @@ export const deleteDeveloperAccount = async (req, res, next) => {
       }
     }
 
-    // 4. Soft-delete or purge developer from MongoDB
-    // "Stripe Customer Mapping (do not delete Stripe records, only unlink them)" -> we delete the developer record or mark as deleted.
-    // The requirement says: "Soft delete first, then permanently purge after a retention period... delete Firebase developer account, MongoDB developer record..."
-    // Since we are unlinking, let's delete the MongoDB developer record.
     await Developer.deleteOne({ _id: devId });
 
     res.status(200).json({

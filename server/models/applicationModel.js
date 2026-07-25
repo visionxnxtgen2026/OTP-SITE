@@ -102,8 +102,17 @@ const applicationSchema = new mongoose.Schema(
     allowedIPs: [{ type: String, trim: true }],
     status: {
       type: String,
-      enum: ['active', 'inactive'],
+      enum: ['active', 'suspended', 'disabled', 'inactive'],
       default: 'active'
+    },
+    // Application limits
+    dailyLimit: {
+      type: Number,
+      default: 1000
+    },
+    monthlyLimit: {
+      type: Number,
+      default: 30000
     },
     // Per-application authentication configuration
     // Changing these only affects this specific application
@@ -119,6 +128,8 @@ const applicationSchema = new mongoose.Schema(
     monthlyUsage: { type: Number, default: 0 },
     totalUsage: { type: Number, default: 0 },
     lastUsageDate: { type: String, default: null },
+    lastUsed: { type: Date, default: null },
+    lastRequest: { type: Date, default: null },
     freeLimit: { type: Number, default: 5 },
     payAsYouGoEnabled: { type: Boolean, default: false },
     billingStatus: {

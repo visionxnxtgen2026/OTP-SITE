@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 
 // Local Services, Stores & Helpers
-import { auth } from '../services/firebase';
+import { auth } from '../firebase/firebase';
 import { useAuthStore } from '../store/authStore';
 import { cleanPhoneInput } from '../utils/formatting';
 import { detectUserCountryAsync, countriesList } from '../utils/countries';

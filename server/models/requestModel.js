@@ -41,6 +41,12 @@ const requestSchema = new mongoose.Schema(
       type: Boolean,
       default: false
     },
+    approvedAt: {
+      type: Date
+    },
+    approvedBy: {
+      type: String
+    },
     userPhoneNumber: {
       type: String,
       trim: true

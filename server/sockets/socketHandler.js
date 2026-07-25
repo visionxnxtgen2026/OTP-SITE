@@ -132,8 +132,8 @@ export const initSocket = (server) => {
     }
     onlineUsers.get(userId).add(socket.id);
 
-    // Join named rooms for phoneNumber and ddsId so we can emit by any identity.
-    // The primary room key is MongoDB _id (userId). These are secondary aliases.
+    // Join primary room for userId as well as secondary aliases for phoneNumber and ddsId
+    socket.join(userId);
     if (socket.user.phoneNumber) {
       socket.join(socket.user.phoneNumber);
     }
@@ -225,14 +225,16 @@ export const initSocket = (server) => {
   const socketHelpers = {
     // Emit custom socket event to a specific user
     emitToUser: (userId, eventName, eventData) => {
-      const socketIds = onlineUsers.get(userId.toString());
-      if (socketIds) {
+      const targetRoom = userId.toString();
+      io.to(targetRoom).emit(eventName, eventData);
+      const socketIds = onlineUsers.get(targetRoom);
+      if (socketIds && socketIds.size > 0) {
         socketIds.forEach(socketId => {
           io.to(socketId).emit(eventName, eventData);
         });
         return true;
       }
-      return false;
+      return true;
     },
 
     // Send notifications to specific user

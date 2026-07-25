@@ -1,31 +1,34 @@
 /**
- * DDS External API Routes — v2
- *
- * Base: /api/v1/auth
- *
- * All routes are authenticated via resolveApiKey middleware.
- * Developers only need their dds_sk_xxx secret key.
- * No applicationId or developerId required in request bodies.
+ * DDS External API Routes (Base: /api/v1/auth)
+ * Enterprise 12-Step Security Validated Endpoints for DDS SDK & User App
  */
 
 import express from 'express';
 import { resolveApiKey } from '../middleware/apiKeyMiddleware.js';
 import {
   requestVerification,
-  submitVerificationCode,
+  verifyAuthentication,
   checkVerificationStatus,
+  cancelAuthRequest,
+  getAppUsage,
+  getHealthStatus,
   approveAuthRequest,
   rejectAuthRequest
 } from '../controllers/apiController.js';
 
 const router = express.Router();
 
-// Apply key resolution middleware to external API routes that use API key
-router.post('/request', resolveApiKey, requestVerification);
-router.post('/code', resolveApiKey, submitVerificationCode);
-router.get('/status/:requestId', resolveApiKey, checkVerificationStatus);
+// Public Health Check
+router.get('/health', getHealthStatus);
 
-// User app / approval endpoints (can be called with requestId)
+// SDK Authenticated Endpoints (Enforces ordered 12-step security pipeline)
+router.post('/request', resolveApiKey, requestVerification);
+router.post('/verify', resolveApiKey, verifyAuthentication);
+router.get('/status/:requestId', resolveApiKey, checkVerificationStatus);
+router.post('/cancel', resolveApiKey, cancelAuthRequest);
+router.get('/usage', resolveApiKey, getAppUsage);
+
+// User App Mobile Approval / Rejection Endpoints
 router.post('/approve', approveAuthRequest);
 router.post('/reject', rejectAuthRequest);
 

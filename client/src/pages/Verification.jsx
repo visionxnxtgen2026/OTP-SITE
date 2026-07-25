@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 
 // Services & Hooks
-import { auth } from '../services/firebase';
+import { auth } from '../firebase/firebase';
 import { useAuthStore } from '../store/authStore';
 import api from '../services/api';
 import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';

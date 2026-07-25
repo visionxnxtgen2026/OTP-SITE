@@ -22,8 +22,8 @@ router.post('/google-login', authLimiter, googleLogin);
 // 3rd-Party developer endpoints (Standard & Legacy)
 router.post('/request', resolveApiKey, requestVerification);
 router.post('/code', resolveApiKey, submitVerificationCode);
-router.post('/request-verification', requestSecureVerification);
-router.get('/status/:verificationRequestId', checkSecureVerificationStatus);
+router.post('/request-verification', resolveApiKey, requestSecureVerification);
+router.get('/status/:verificationRequestId', resolveApiKey, checkSecureVerificationStatus);
 
 // User-facing (DDS App) endpoints
 router.post('/verify-code', protect, verifiedOnly, verifyApprovalCode);

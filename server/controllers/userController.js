@@ -564,13 +564,9 @@ export const deleteUserAccount = async (req, res, next) => {
         // Fire-and-forget webhook callbacks for each cancelled request
         for (const request of pendingRequests) {
           try {
-            let webhookUrl = null;
-            if (request.clientId === 'app_cartify_123') {
-              webhookUrl = 'http://localhost:5001/api/callback';
-            }
-            if (webhookUrl) {
+            if (request.webhookUrl) {
               await axios.post(
-                webhookUrl,
+                request.webhookUrl,
                 { requestId: request.verificationId, status: 'Cancelled' },
                 { timeout: 2000 }
               );

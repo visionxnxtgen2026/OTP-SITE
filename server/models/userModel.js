@@ -58,6 +58,11 @@ const userSchema = new mongoose.Schema(
     phoneVerifiedAt: {
       type: Date
     },
+    fcmToken: {
+      type: String,
+      trim: true,
+      default: ''
+    },
     authProvider: {
       type: String,
       default: 'google'

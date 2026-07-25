@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, Lock, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { signInWithPopup } from 'firebase/auth';
-import { auth, googleProvider } from '../services/firebase';
+import { auth, googleProvider } from '../firebase/firebase';
 import api from '../services/api';
 import { useAdminStore } from '../store/adminStore';
 

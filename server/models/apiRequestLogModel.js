@@ -23,11 +23,19 @@ const apiRequestLogSchema = new mongoose.Schema(
     // The API endpoint hit
     endpoint: { type: String, required: true },
     method: { type: String, default: 'POST' },
-    // SUCCESS or FAILED — only SUCCESS requests incur a cost
+    // Enterprise log attributes (Part 11)
+    authenticationId: { type: String, index: true },
+    applicationIdStr: { type: String, index: true },
+    country: { type: String, default: 'Unknown' },
+    device: { type: String, default: 'Server/SDK' },
+    sdkVersion: { type: String, default: '1.0.0' },
+    verificationCodeLength: { type: Number, default: 6 },
+    expiry: { type: Number, default: 120 },
+    userDecision: { type: String, enum: ['Approve', 'Reject', 'Expired', 'Cancelled', 'Pending', 'N/A'], default: 'N/A' },
+    // Request status
     status: {
       type: String,
-      enum: ['SUCCESS', 'FAILED'],
-      required: true,
+      default: 'SUCCESS',
       index: true
     },
     // Cost of this request in paise (₹0.15 = 15 paise)
@@ -35,8 +43,9 @@ const apiRequestLogSchema = new mongoose.Schema(
       type: Number,
       default: 0
     },
-    // Response time in milliseconds
-    responseTimeMs: { type: Number },
+    // Latency / Response time in milliseconds
+    latency: { type: Number, default: 0 },
+    responseTimeMs: { type: Number, default: 0 },
     // IP of the caller application server
     ipAddress: { type: String },
     // High-precision timestamp for time-series queries
@@ -47,11 +56,7 @@ const apiRequestLogSchema = new mongoose.Schema(
     }
   },
   {
-    // No updatedAt needed — logs are immutable
-    timestamps: { createdAt: 'createdAt', updatedAt: false },
-    // TTL index: auto-delete logs older than 90 days to control storage
-    // Remove this if you want permanent logs
-    // expireAfterSeconds: 7776000
+    timestamps: { createdAt: 'createdAt', updatedAt: false }
   }
 );
 

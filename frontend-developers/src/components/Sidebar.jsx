@@ -6,7 +6,7 @@ import {
   BookOpen, Settings, LogOut, Zap, ChevronRight, HelpCircle, MessageSquare
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { auth } from '../services/firebase';
+import { auth } from '../firebase/firebase';
 import { useDevStore } from '../store/devStore';
 
 const NAV_MAIN = [

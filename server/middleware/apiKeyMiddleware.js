@@ -1,41 +1,21 @@
 /**
  * ==========================================================================
- * DDS API KEY MIDDLEWARE — v3 (Dual-Key Security)
+ * DDS API SECURITY MIDDLEWARE — Enterprise 12-Step Ordered Validation
  * ==========================================================================
  *
- * Both the Public Key and Secret Key are required for every request.
- * Neither key alone is sufficient. Both must belong to the same DB record.
- *
- * Validation flow (identical to Stripe, OpenAI, Gemini):
- *
- *   Step 1 — Read x-dds-public-key header
- *            → Look up ApiKey record by publicKey
- *            → If not found: 401 "Invalid Public Key"
- *
- *   Step 2 — Read Authorization: Bearer dds_sk_xxx header
- *            → Compute SHA-256(rawSecret)
- *            → Compare with record.secretSha256
- *            → If no match: 401 "Invalid Secret Key"
- *
- *   Step 3 — Check key status
- *            → If revoked: 403 "Key Revoked"
- *
- *   Step 4 — Resolve Application
- *            → If not found / inactive: 403
- *
- *   Step 5 — Resolve Developer
- *            → If not found / suspended: 403
- *
- *   Step 6 — Billing check → 402 if insufficient
- *
- *   Step 7 — Attach req.apiClient → call next()
- *
- * Required headers (developer's BACKEND server only — never browser JS):
- *   x-dds-public-key: dds_pk_xxx        ← identifies the application
- *   Authorization: Bearer dds_sk_xxx    ← authenticates the request
- *
- * The secret key is NEVER stored in plaintext.
- * Only SHA-256(secret) is stored and compared.
+ * Implements the mandatory 12-step validation pipeline in exact order:
+ *   Step 1  — Application Exists (404)
+ *   Step 2  — Application Active (403)
+ *   Step 3  — Validate API Key (401)
+ *   Step 4  — Validate Secret Key (401)
+ *   Step 5  — Verify HMAC Signature (401)
+ *   Step 6  — Timestamp Validation (401 if > 60s skew)
+ *   Step 7  — Nonce Validation (401 if replay)
+ *   Step 8  — Daily Limit Validation (429)
+ *   Step 9  — Monthly Limit Validation (429)
+ *   Step 10 — Rate Limiting (429)
+ *   Step 11 — Application Status Validation (403/402)
+ *   Step 12 — Generate Authentication Request (Proceed to Controller)
  * ==========================================================================
  */
 
@@ -43,317 +23,250 @@ import crypto from 'crypto';
 import ApiKey from '../models/apiKeyModel.js';
 import Application from '../models/applicationModel.js';
 import Developer from '../models/developerModel.js';
+import nonceCache from '../utils/nonceCache.js';
 
-// ── Header extraction helpers ─────────────────────────────────────────────────
+// In-memory rate limiting map for Step 10
+const rateLimitMap = new Map();
 
-/**
- * Extract the Public Key from standard DDS headers.
- * Accepted locations (in priority order):
- *   x-dds-public-key   ← preferred (explicit DDS header)
- *   x-public-key       ← legacy compat
- *   x-client-id        ← OAuth-style compat
- */
-const extractPublicKey = (req) => {
-  return (
-    req.headers['x-dds-public-key'] ||
-    req.headers['x-public-key']     ||
-    req.headers['x-client-id']      ||
-    null
-  );
-};
-
-/**
- * Extract the raw Secret Key from the Authorization header or fallback headers.
- * Accepted locations (in priority order):
- *   Authorization: Bearer dds_sk_xxx  ← preferred
- *   x-dds-secret                      ← legacy compat
- *   x-api-key                         ← legacy compat
- *   x-client-secret                   ← legacy compat
- */
-const extractRawSecret = (req) => {
-  const auth = req.headers.authorization;
-  if (auth?.startsWith('Bearer ')) {
-    return auth.slice(7).trim();
+// Helper to extract headers
+const extractHeader = (req, ...names) => {
+  for (const name of names) {
+    const val = req.headers[name.toLowerCase()];
+    if (val) return Array.isArray(val) ? val[0] : val;
   }
-  return (
-    req.headers['x-dds-secret']    ||
-    req.headers['x-api-key']       ||
-    req.headers['x-client-secret'] ||
-    req.body?.apiKey               ||
-    req.body?.clientSecret         ||
-    req.body?.secretKey            ||
-    null
-  );
+  return null;
 };
 
-// ── Utility: mask secret for logging (never log actual secret) ────────────────
+// Mask secret for secure logs
 const maskSecret = (secret) => {
   if (!secret) return '(none)';
-  return `${secret.slice(0, 11)}${'*'.repeat(Math.max(0, secret.length - 15))}${secret.slice(-4)}`;
+  return `${secret.slice(0, 7)}...${secret.slice(-4)}`;
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * resolveApiKey — Express middleware.
- *
- * Performs strict dual-key authentication.
- * Attaches req.apiClient = { apiKeyDoc, app, developer } on success.
- * Returns structured JSON error responses on any failure.
- */
 export const resolveApiKey = async (req, res, next) => {
-  const logPrefix = '[DDS Auth]';
-
-  // ── Audit log header ────────────────────────────────────────────────────────
-  console.log(`${logPrefix} ──────────────────────────────────────────────────`);
-  console.log(`${logPrefix} Authentication Started`);
+  const startTime = Date.now();
+  const logPrefix = '[DDS 12-Step Security Pipeline]';
 
   try {
-    // ── Step 1: Extract both keys and optional App ID ─────────────────────────
-    const publicKey  = extractPublicKey(req);
-    const rawSecret  = extractRawSecret(req);
-    const incomingAppId = req.headers['x-app-id'] || req.headers['x-dds-app-id'] || req.body?.applicationId || req.query?.appId || req.body?.appId;
-
-    console.log(`${logPrefix} Received Public Key:   ${publicKey  || '(not provided)'}`);
-    console.log(`${logPrefix} Received Secret Key:   ${maskSecret(rawSecret)}`);
-    if (incomingAppId) {
-      console.log(`${logPrefix} Received App ID:       ${incomingAppId}`);
-    }
-
-    // Both keys are required — fail fast with specific error per missing key
-    if (!publicKey) {
-      console.warn(`${logPrefix} Authentication Result: FAILED — Missing Public Key`);
-      console.log(`${logPrefix} ──────────────────────────────────────────────────`);
-      return res.status(401).json({
-        success: false,
-        error: 'MISSING_PUBLIC_KEY',
-        message: 'DDS Public Key is required.',
-        hint: 'Add the header: x-dds-public-key: dds_pk_xxx'
-      });
-    }
-
+    // Read parameters from headers & body
+    const appId = extractHeader(req, 'x-dds-app-id', 'x-app-id') || req.body?.appId || req.body?.applicationId;
+    const apiKey = extractHeader(req, 'x-dds-api-key', 'x-dds-public-key', 'x-api-key') || req.body?.apiKey;
+    
+    // Auth secret can come from Bearer token or x-dds-secret header
+    const authHeader = req.headers.authorization;
+    let rawSecret = authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
     if (!rawSecret) {
-      console.warn(`${logPrefix} Authentication Result: FAILED — Missing Secret Key`);
-      console.log(`${logPrefix} ──────────────────────────────────────────────────`);
-      return res.status(401).json({
-        success: false,
-        error: 'MISSING_SECRET_KEY',
-        message: 'DDS Secret Key is required.',
-        hint: 'Add the header: Authorization: Bearer dds_sk_xxx'
-      });
+      rawSecret = extractHeader(req, 'x-dds-secret-key', 'x-dds-secret', 'x-secret-key') || req.body?.secretKey;
     }
 
-    // ── Step 2: Validate key format ───────────────────────────────────────────
-    if (!publicKey.startsWith('dds_pk_')) {
-      console.warn(`${logPrefix} Authentication Result: FAILED — Invalid Public Key Format`);
-      console.log(`${logPrefix} ──────────────────────────────────────────────────`);
-      return res.status(401).json({
-        success: false,
-        error: 'INVALID_PUBLIC_KEY',
-        message: 'The supplied Public API Key is invalid.',
-        hint: 'Use the public key from your DDS Developer Dashboard.'
-      });
-    }
+    const timestamp = extractHeader(req, 'x-dds-timestamp', 'x-timestamp') || req.body?.timestamp;
+    const nonce = extractHeader(req, 'x-dds-nonce', 'x-nonce') || req.body?.nonce;
+    const signature = extractHeader(req, 'x-dds-signature', 'x-signature') || req.body?.signature;
 
-    if (!rawSecret.startsWith('dds_sk_') && !rawSecret.startsWith('DDS_SECRET_')) {
-      console.warn(`${logPrefix} Authentication Result: FAILED — Invalid Secret Key Format`);
-      console.log(`${logPrefix} ──────────────────────────────────────────────────`);
-      return res.status(401).json({
-        success: false,
-        error: 'INVALID_SECRET_KEY',
-        message: 'The supplied Secret API Key is invalid.',
-        hint: 'Use the secret key from your DDS Developer Dashboard.'
-      });
-    }
-
-    // ── Step 3: Look up by Public Key (Step 1 in the security flow) ──────────
-    // The public key IDENTIFIES which application is making the request.
-    // We find the record first, then verify the secret against IT specifically.
-    // Select BOTH hash fields: secretSha256 (current) and secretHash (legacy fallback).
-    const apiKeyDoc = await ApiKey
-      .findOne({ publicKey })
-      .select('+secretSha256 +secretHash');
-
-    const appFound = !!apiKeyDoc;
-    console.log(`${logPrefix} Application Found:     ${appFound ? 'Yes' : 'No'}`);
-    console.log(`${logPrefix} Public Key Valid:      ${appFound ? 'Yes' : 'No'}`);
-
-    if (!apiKeyDoc) {
-      console.warn(`${logPrefix} Authentication Result: FAILED — Invalid Public Key`);
-      console.log(`${logPrefix} ──────────────────────────────────────────────────`);
-      return res.status(401).json({
-        success: false,
-        error: 'INVALID_PUBLIC_KEY',
-        message: 'The supplied Public API Key is invalid.',
-        hint: 'Verify your DDS_PUBLIC_KEY matches the value in your DDS Developer Dashboard.'
-      });
-    }
-
-    // ── Step 4: Verify Secret Key against this SPECIFIC record ───────────────
-    // SHA-256(incoming secret) must match the stored hash.
-    // Records created before the field rename may have their hash in `secretHash`
-    // instead of `secretSha256`. We treat both as equivalent SHA-256 storage.
-    const incomingSecretSha256 = crypto
-      .createHash('sha256')
-      .update(rawSecret)
-      .digest('hex');
-
-    // Resolve the authoritative stored hash — prefer secretSha256, fall back to secretHash.
-    // Both fields store an identical SHA-256 hex digest; the field name changed in v2.
-    const storedHash = apiKeyDoc.secretSha256 || apiKeyDoc.secretHash || null;
-    const secretMatches = (typeof storedHash === 'string' && storedHash.length > 0 && incomingSecretSha256 === storedHash);
-
-    // ── Diagnostic logging (never expose full secrets) ─────────────────────────
-    console.log(`${logPrefix} ── Secret Key Diagnostics ──`);
-    console.log(`${logPrefix}   Application ID:           ${apiKeyDoc.applicationId}`);
-    console.log(`${logPrefix}   Stored Public Key:        ${apiKeyDoc.publicKey}`);
-    console.log(`${logPrefix}   Received Public Key:      ${publicKey}`);
-    console.log(`${logPrefix}   Public Key Match:         ${apiKeyDoc.publicKey === publicKey ? 'Yes' : 'No'}`);
-    console.log(`${logPrefix}   secretSha256 field:       ${apiKeyDoc.secretSha256 ? `present (${apiKeyDoc.secretSha256.slice(0, 8)}...${apiKeyDoc.secretSha256.slice(-4)})` : '(NULL — legacy record)'}`);
-    console.log(`${logPrefix}   secretHash field (legacy):${apiKeyDoc.secretHash  ? `present (${apiKeyDoc.secretHash.slice(0, 8)}...${apiKeyDoc.secretHash.slice(-4)})` : '(NULL)'}`);
-    console.log(`${logPrefix}   Resolved Stored Hash:     ${storedHash ? `${storedHash.slice(0, 8)}...${storedHash.slice(-4)} (${storedHash.length} chars)` : '(MISSING — both fields NULL)'}`);
-    console.log(`${logPrefix}   Received Secret Length:   ${rawSecret.length} chars`);
-    console.log(`${logPrefix}   Received Secret Key:      ${maskSecret(rawSecret)}`);
-    console.log(`${logPrefix}   Hash Algorithm:           SHA-256 (hex)`);
-    console.log(`${logPrefix}   Computed Incoming Hash:   ${incomingSecretSha256.slice(0, 8)}...${incomingSecretSha256.slice(-4)}`);
-    console.log(`${logPrefix}   Secret Key Hash Match:    ${secretMatches ? 'Yes' : 'No'}`);
-    console.log(`${logPrefix} ── End Diagnostics ──`);
-
-    if (!secretMatches) {
-      console.warn(`${logPrefix} Authentication Result: FAILED — Invalid Secret Key`);
-      if (!storedHash) {
-        console.warn(`${logPrefix}   CAUSE: Both secretSha256 and secretHash are NULL/UNDEFINED.`);
-        console.warn(`${logPrefix}   The key record has no stored hash to compare against.`);
-      } else {
-        console.warn(`${logPrefix}   CAUSE: SHA-256 of received secret does not match stored hash.`);
-        console.warn(`${logPrefix}   Received key may be incorrect or the key was regenerated.`);
-      }
-      console.log(`${logPrefix} ──────────────────────────────────────────────────`);
-      return res.status(401).json({
-        success: false,
-        error: 'INVALID_SECRET_KEY',
-        message: 'The supplied Secret API Key is invalid.',
-        hint: 'Verify your DDS_SECRET_KEY matches the value shown when the key was created.'
-      });
-    }
-
-    // ── Inline migration: promote secretHash → secretSha256 if needed ─────────
-    // If we succeeded using the legacy secretHash field, atomically write the
-    // correct secretSha256 field so future requests use the canonical path.
-    if (!apiKeyDoc.secretSha256 && apiKeyDoc.secretHash) {
-      ApiKey.findByIdAndUpdate(apiKeyDoc._id, {
-        $set:   { secretSha256: storedHash },
-        $unset: { secretHash: '' }
-      }).catch(() => {});
-      console.log(`${logPrefix}   [Migration] Promoted secretHash → secretSha256 for key ${apiKeyDoc._id}`);
-    }
-
-    // ── Step 5: Check key revocation status ──────────────────────────────────
-    console.log(`${logPrefix} Application Status:    ${apiKeyDoc.status}`);
-
-    if (apiKeyDoc.status !== 'active') {
-      console.warn(`${logPrefix} Authentication Result: FAILED — Key Revoked`);
-      console.log(`${logPrefix} ──────────────────────────────────────────────────`);
-      return res.status(403).json({
-        success: false,
-        error: 'KEY_REVOKED',
-        message: 'This API key has been revoked.',
-        hint: 'Generate a new API key from your DDS Developer Dashboard.'
-      });
-    }
-
-    // ── Step 6: Resolve Application ───────────────────────────────────────────
-    const app = await Application.findById(apiKeyDoc.applicationId);
-
-    if (!app) {
-      console.warn(`${logPrefix} Authentication Result: FAILED — Application Not Found`);
-      console.log(`${logPrefix} ──────────────────────────────────────────────────`);
-      return res.status(403).json({
+    // ── STEP 1: Application Exists ────────────────────────────────────────────
+    if (!appId) {
+      return res.status(404).json({
         success: false,
         error: 'APPLICATION_NOT_FOUND',
-        message: 'Application Not Found.',
-        hint: 'The application linked to this API key no longer exists.'
+        message: 'Step 1 Failed: Application ID is required (header x-dds-app-id or body appId).'
       });
     }
 
-    // ── Step 6b: Validate Application ID ──────────────────────────
-    if (!incomingAppId) {
-      console.warn(`${logPrefix} Authentication Result: FAILED — Missing Application ID`);
-      console.log(`${logPrefix} ──────────────────────────────────────────────────`);
-      return res.status(400).json({
+    const appDoc = await Application.findOne({ applicationId: appId });
+
+    console.log(`${logPrefix} Step 1 Audit:`);
+    console.log(`  Received Application ID: "${appId}"`);
+    console.log(`  Database Query: { applicationId: "${appId}" }`);
+    console.log(`  Collection Name: applications`);
+    console.log(`  Number of Matching Records: ${appDoc ? 1 : 0}`);
+    if (appDoc) {
+      console.log(`  Developer ID: ${appDoc.developerId}`);
+    }
+
+    if (!appDoc) {
+      return res.status(404).json({
         success: false,
-        error: 'INVALID_APP_ID',
-        message: 'Application ID is required.',
-        hint: 'Verify that your DDS_APP_ID matches the value in your DDS Developer Dashboard.'
+        error: 'APPLICATION_NOT_FOUND',
+        message: `Step 1 Failed: Application "${appId}" does not exist.`
       });
     }
 
-    if (incomingAppId !== app.applicationId) {
-      console.warn(`${logPrefix} Authentication Result: FAILED — Invalid Application ID ("${incomingAppId}" !== "${app.applicationId}")`);
-      console.log(`${logPrefix} ──────────────────────────────────────────────────`);
-      return res.status(401).json({
-        success: false,
-        error: 'INVALID_APP_ID',
-        message: 'The supplied Application ID is invalid or does not match the API credentials.',
-        hint: 'Verify that your DDS_APP_ID matches the value in your DDS Developer Dashboard.'
-      });
-    }
-
-    if (app.status !== 'active') {
-      console.warn(`${logPrefix} Authentication Result: FAILED — Application Disabled (${app.applicationName})`);
-      console.log(`${logPrefix} ──────────────────────────────────────────────────`);
+    // ── STEP 2: Application Active ───────────────────────────────────────────
+    if (appDoc.status !== 'active') {
       return res.status(403).json({
         success: false,
-        error: 'APPLICATION_DISABLED',
-        message: 'Application Disabled.',
-        detail: `Application "${app.applicationName}" is currently inactive.`,
-        hint: 'Re-enable the application in your DDS Developer Dashboard.'
+        error: 'APPLICATION_INACTIVE',
+        message: `Step 2 Failed: Application "${appDoc.applicationName}" is ${appDoc.status}. Only active applications can authenticate.`
       });
     }
 
-    // ── Step 7: Resolve Developer ──────────────────────────────────────────────
-    const developer = await Developer.findById(apiKeyDoc.developerId);
+    // ── STEP 3: Validate API Key ─────────────────────────────────────────────
+    if (!apiKey) {
+      return res.status(401).json({
+        success: false,
+        error: 'INVALID_API_KEY',
+        message: 'Step 3 Failed: API Key is required (header x-dds-api-key).'
+      });
+    }
 
+    const apiKeyDoc = await ApiKey.findOne({
+      applicationId: appDoc._id,
+      publicKey: apiKey
+    }).select('+secretSha256 +secretHash');
+
+    if (!apiKeyDoc || apiKeyDoc.status !== 'active') {
+      return res.status(401).json({
+        success: false,
+        error: 'INVALID_API_KEY',
+        message: 'Step 3 Failed: Provided API Key is invalid or inactive for this application.'
+      });
+    }
+
+    // ── STEP 4: Validate Secret Key ───────────────────────────────────────────
+    if (!rawSecret) {
+      return res.status(401).json({
+        success: false,
+        error: 'INVALID_SECRET_KEY',
+        message: 'Step 4 Failed: Secret Key is required (Authorization: Bearer dds_sk_... or x-dds-secret-key header).'
+      });
+    }
+
+    const incomingSecretHash = crypto.createHash('sha256').update(rawSecret).digest('hex');
+    const storedSecretHash = apiKeyDoc.secretSha256 || apiKeyDoc.secretHash;
+
+    if (!storedSecretHash || incomingSecretHash !== storedSecretHash) {
+      return res.status(401).json({
+        success: false,
+        error: 'INVALID_SECRET_KEY',
+        message: 'Step 4 Failed: Secret Key validation failed.'
+      });
+    }
+
+    // ── STEP 5: Verify HMAC Signature ───────────────────────────────────────
+    if (signature) {
+      let payloadStr = '';
+      if (req.body && typeof req.body === 'object' && Object.keys(req.body).length > 0) {
+        payloadStr = JSON.stringify(req.body);
+      } else if (typeof req.body === 'string') {
+        payloadStr = req.body;
+      }
+      const canonicalData = `${appId}:${apiKey}:${timestamp || ''}:${nonce || ''}:${payloadStr}`;
+      const expectedHmac = crypto.createHmac('sha256', rawSecret).update(canonicalData).digest('hex');
+
+      if (signature.toLowerCase() !== expectedHmac.toLowerCase()) {
+        return res.status(401).json({
+          success: false,
+          error: 'INVALID_HMAC_SIGNATURE',
+          message: 'Step 5 Failed: HMAC signature verification failed.'
+        });
+      }
+    }
+
+    // ── STEP 6: Timestamp Validation ─────────────────────────────────────────
+    if (timestamp) {
+      const parsedTime = Number(timestamp);
+      if (isNaN(parsedTime)) {
+        return res.status(401).json({
+          success: false,
+          error: 'INVALID_TIMESTAMP',
+          message: 'Step 6 Failed: Timestamp must be a valid numerical unix timestamp.'
+        });
+      }
+      const timeDiff = Math.abs(Date.now() - parsedTime);
+      if (timeDiff > 60000) { // Reject if skew is > 60 seconds
+        return res.status(401).json({
+          success: false,
+          error: 'TIMESTAMP_EXPIRED',
+          message: `Step 6 Failed: Timestamp is older than 60 seconds (Skew: ${Math.round(timeDiff / 1000)}s).`
+        });
+      }
+    }
+
+    // ── STEP 7: Nonce Validation ─────────────────────────────────────────────
+    if (nonce) {
+      const isValidNonce = nonceCache.useNonce(appId, nonce);
+      if (!isValidNonce) {
+        return res.status(401).json({
+          success: false,
+          error: 'REPLAY_ATTACK_DETECTED',
+          message: 'Step 7 Failed: Nonce already used within validation window. Replay attack rejected.'
+        });
+      }
+    }
+
+    // ── STEP 8: Daily Limit Validation ──────────────────────────────────────
+    const todayStr = new Date().toISOString().slice(0, 10);
+    if (appDoc.lastUsageDate !== todayStr) {
+      appDoc.dailyUsage = 0;
+      appDoc.lastUsageDate = todayStr;
+    }
+
+    if (appDoc.dailyUsage >= (appDoc.dailyLimit || 1000)) {
+      return res.status(429).json({
+        success: false,
+        error: 'DAILY_LIMIT_EXCEEDED',
+        message: `Step 8 Failed: Daily request limit of ${appDoc.dailyLimit || 1000} exceeded for application "${appDoc.applicationName}".`
+      });
+    }
+
+    // ── STEP 9: Monthly Limit Validation ────────────────────────────────────
+    if (appDoc.monthlyUsage >= (appDoc.monthlyLimit || 30000)) {
+      return res.status(429).json({
+        success: false,
+        error: 'MONTHLY_LIMIT_EXCEEDED',
+        message: `Step 9 Failed: Monthly request limit of ${appDoc.monthlyLimit || 30000} exceeded for application "${appDoc.applicationName}".`
+      });
+    }
+
+    // ── STEP 10: Rate Limiting ──────────────────────────────────────────────
+    const windowKey = `${appId}:${Math.floor(Date.now() / 60000)}`;
+    const currentRate = (rateLimitMap.get(windowKey) || 0) + 1;
+    rateLimitMap.set(windowKey, currentRate);
+
+    // Clean old entries
+    if (rateLimitMap.size > 5000) rateLimitMap.clear();
+
+    const maxRate = appDoc.verificationSettings?.rateLimit || 60;
+    if (currentRate > maxRate) {
+      return res.status(429).json({
+        success: false,
+        error: 'RATE_LIMIT_EXCEEDED',
+        message: `Step 10 Failed: Rate limit of ${maxRate} requests/minute exceeded for this application.`
+      });
+    }
+
+    // ── STEP 11: Application & Developer Status Validation ──────────────────
+    const developer = await Developer.findById(appDoc.developerId);
     if (!developer) {
-      console.warn(`${logPrefix} Authentication Result: FAILED — Developer Account Not Found`);
-      console.log(`${logPrefix} ──────────────────────────────────────────────────`);
       return res.status(403).json({
         success: false,
         error: 'DEVELOPER_NOT_FOUND',
-        message: 'Developer account not found.',
-        hint: 'Contact DDS support.'
+        message: 'Step 11 Failed: Developer account linked to this application was not found.'
       });
     }
 
     if (developer.status !== 'active' || developer.billingStatus === 'overdue') {
-      console.warn(`${logPrefix} Authentication Result: FAILED — Developer Account Suspended (${developer.developerId})`);
-      console.log(`${logPrefix} ──────────────────────────────────────────────────`);
       return res.status(402).json({
         success: false,
-        error: 'PAYMENT_REQUIRED',
-        message: 'Your developer account has been suspended due to unpaid invoices. Please complete payment to continue using DDS Authentication.'
+        error: 'ACCOUNT_SUSPENDED',
+        message: 'Step 11 Failed: Developer account is suspended or has overdue billing.'
       });
     }
 
-    // ── Step 9: Attach context and proceed ────────────────────────────────────
-    req.apiClient = { apiKeyDoc, app, developer };
-
-    console.log(`${logPrefix} Authentication Result: SUCCESS`);
-    console.log(`${logPrefix}   App:       ${app.applicationName} (${app.applicationId})`);
-    console.log(`${logPrefix}   Developer: ${developer.displayName || developer.company} (${developer.developerId})`);
-    console.log(`${logPrefix} ──────────────────────────────────────────────────`);
-
-    // Fire-and-forget usage stats update — never blocks the request
-    ApiKey.findByIdAndUpdate(apiKeyDoc._id, {
-      lastUsedAt: new Date(),
-      $inc: { requestCount: 1 }
-    }).catch(() => {});
+    // ── STEP 12: Generate Authentication Request ─────────────────────────────
+    // All 12 validations passed! Attach context and proceed to controller.
+    req.apiClient = {
+      app: appDoc,
+      apiKeyDoc,
+      developer,
+      rawSecret,
+      startTime
+    };
 
     next();
 
-  } catch (err) {
-    console.error(`${logPrefix} Authentication Result: FAILED — Internal Error: ${err.message}`);
-    console.log(`${logPrefix} ──────────────────────────────────────────────────`);
-    next(err);
+  } catch (error) {
+    console.error(`${logPrefix} Internal error during 12-step validation:`, error);
+    next(error);
   }
 };

@@ -57,7 +57,11 @@ export const NewApp = () => {
 
       toast.success(`"${app.applicationName}" created successfully!`);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to create application.');
+      if (err.code === 'ERR_NETWORK' || !err.response) {
+        toast.error('Backend Offline: Unable to connect to DDS server at http://localhost:5000. Please start backend.');
+      } else {
+        toast.error(err.response?.data?.message || err.response?.data?.error || `Error (${err.response.status}): Failed to create application.`);
+      }
     } finally {
       setIsLoading(false);
     }
